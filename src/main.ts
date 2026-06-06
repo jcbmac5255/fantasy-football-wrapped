@@ -4,6 +4,7 @@ import { createRouter, createWebHistory } from "vue-router";
 import { registerSW } from "virtual:pwa-register";
 import "./index.css";
 import App from "./App.vue";
+import { needRefresh, setUpdateSW } from "./lib/pwaUpdate";
 import posthogPlugin from "./plugins/posthog";
 import { useAuthStore } from "./store/auth";
 import { useSubscriptionStore } from "./store/subscription";
@@ -158,5 +159,13 @@ router.afterEach((to) => {
 app.component("apexchart", ApexChart);
 app.use(router);
 app.use(posthogPlugin);
-registerSW({ immediate: true });
+// Prompt mode: when a new version is deployed, surface a blocking refresh modal
+// (handled in App.vue) instead of silently reloading.
+const updateSW = registerSW({
+  immediate: true,
+  onNeedRefresh() {
+    needRefresh.value = true;
+  },
+});
+setUpdateSW(updateSW);
 app.mount("#app");

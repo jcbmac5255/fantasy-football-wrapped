@@ -6,6 +6,7 @@ import { useStore } from "./store/store";
 import { useAuthStore } from "./store/auth";
 import { useMembershipStore } from "./store/membership";
 import { sendHeartbeat } from "./lib/admin";
+import { needRefresh, applyUpdate } from "./lib/pwaUpdate";
 import AuthLanding from "./views/AuthLanding.vue";
 import { LeagueInfoType } from "./types/types";
 import { inject } from "@vercel/analytics";
@@ -224,5 +225,28 @@ const setHtmlBackground = () => {
       </SidebarProvider>
     </div>
     <Toaster />
+
+    <!-- Forced-update gate: blocks the whole app until the user refreshes -->
+    <div
+      v-if="needRefresh"
+      class="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm"
+    >
+      <div
+        class="flex flex-col items-center w-full max-w-sm gap-4 p-8 text-center border rounded-xl bg-background shadow-2xl"
+      >
+        <img
+          src="/engine_line_ffl_transparent.png"
+          class="object-contain w-20 h-20"
+          alt="Engine Line logo"
+        />
+        <div>
+          <h2 class="text-xl font-bold">A new version is available</h2>
+          <p class="mt-1 text-sm text-muted-foreground">
+            Refresh to get the latest version of Engine Line.
+          </p>
+        </div>
+        <Button class="w-full" @click="applyUpdate">Refresh</Button>
+      </div>
+    </div>
   </div>
 </template>

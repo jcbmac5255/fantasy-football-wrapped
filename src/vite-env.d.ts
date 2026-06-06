@@ -18,5 +18,17 @@ declare module "markdown-it" {
 }
 
 declare module "virtual:pwa-register" {
-  export const registerSW: (options?: { immediate?: boolean }) => () => void;
+  export interface RegisterSWOptions {
+    immediate?: boolean;
+    onNeedRefresh?: () => void;
+    onOfflineReady?: () => void;
+    onRegisteredSW?: (
+      swScriptUrl: string,
+      registration: ServiceWorkerRegistration | undefined
+    ) => void;
+    onRegisterError?: (error: unknown) => void;
+  }
+  export const registerSW: (
+    options?: RegisterSWOptions
+  ) => (reloadPage?: boolean) => Promise<void>;
 }
