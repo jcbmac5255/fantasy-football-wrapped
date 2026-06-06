@@ -156,7 +156,7 @@ const getSummary = async () => {
 };
 const copyReport = () => {
   navigator.clipboard.writeText(
-    rawSummary.value + "\n\n Created with https://ffwrapped.com"
+    rawSummary.value + "\n\n Created with https://enginelineffl.com"
   );
   toast.success("Summary copied to clipboard!");
 };

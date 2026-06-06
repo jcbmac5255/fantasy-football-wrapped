@@ -16,7 +16,7 @@ const Terms = () => import("./views/Terms.vue");
 const Account = () => import("./views/Account.vue");
 const NotFound = () => import("./views/404.vue");
 
-const siteUrl = "https://ffwrapped.com";
+const siteUrl = "https://enginelineffl.com";
 const defaultMeta = {
   title: "Fantasy Football Wrapped",
   description:

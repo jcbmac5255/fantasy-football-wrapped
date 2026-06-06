@@ -238,7 +238,7 @@ const benchPlayersForCard = computed(() => props.benchPlayers.slice(0, 4));
     </div>
 
     <p class="text-sm text-muted-foreground">
-      Built with <span class="font-semibold text-primary">ffwrapped.com</span>
+      Built with <span class="font-semibold text-primary">enginelineffl.com</span>
     </p>
   </div>
 </template>

@@ -451,7 +451,7 @@ const copyReport = () => {
   navigator.clipboard.writeText(
     (tier.value === "Standard"
       ? rawWeeklyReport.value
-      : rawPremiumWeeklyReport.value) + "\n\nCreated with https://ffwrapped.com"
+      : rawPremiumWeeklyReport.value) + "\n\nCreated with https://enginelineffl.com"
   );
   toast.success("Summary copied to clipboard!");
 };
