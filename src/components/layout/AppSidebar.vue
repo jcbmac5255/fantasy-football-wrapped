@@ -101,7 +101,7 @@ const data = {
     {
       items: [
         {
-          title: "Home",
+          title: "My Team",
           icon: Home,
         },
         {
@@ -198,7 +198,7 @@ const data = {
                 as-child
                 :is-active="
                   store.currentTab === childItem.title &&
-                  (childItem.title !== 'Home' || route.path === '/')
+                  (childItem.title !== 'My Team' || route.path === '/')
                 "
                 @click="changeTab(childItem.title)"
                 class="cursor-pointer"

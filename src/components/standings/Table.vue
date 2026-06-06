@@ -116,7 +116,7 @@ const props = defineProps<{
 }>();
 const store = useStore();
 const tabOptions = [
-  "Home",
+  "My Team",
   "Standings",
   "Power Rankings",
   "Expected Wins",
@@ -145,7 +145,9 @@ interface savedData {
 onMounted(() => {
   const savedCurrentTab = localStorage.getItem("currentTab");
   if (savedCurrentTab) {
-    store.currentTab = savedCurrentTab;
+    // "Home" tab was renamed to "My Team"; migrate any saved value.
+    store.currentTab =
+      savedCurrentTab === "Home" ? "My Team" : savedCurrentTab;
   }
 });
 
@@ -300,7 +302,7 @@ const getTeamName = (tableDataItem: TableDataType) => {
 };
 </script>
 <template>
-  <div :class="['min-w-0', store.currentTab === 'Home' ? '' : 'mx-4']">
+  <div :class="['min-w-0', store.currentTab === 'My Team' ? '' : 'mx-4']">
     <div
       v-if="showStandingsTab"
       class="flex flex-col h-full min-h-0 mt-4 xl:flex-row xl:justify-between"
@@ -728,7 +730,7 @@ const getTeamName = (tableDataItem: TableDataType) => {
       </div>
       <FakeWrapped v-else />
     </div>
-    <div v-if="store.currentTab === 'Home'">
+    <div v-if="store.currentTab === 'My Team'">
       <MyTeam :tableData="tableData" />
     </div>
   </div>

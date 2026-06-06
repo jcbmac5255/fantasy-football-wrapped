@@ -30,7 +30,7 @@ export const useStore = defineStore("main", {
     leagueInfo: [] as LeagueInfoType[],
     currentLeagueId: "",
     leagueSubmitted: false,
-    currentTab: "Home",
+    currentTab: "My Team",
     showLeaguesList: false,
     leaguesList: [] as UserLeagueListItem[],
     username: "",

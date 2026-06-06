@@ -113,7 +113,7 @@ onMounted(async () => {
     <SkeletonLoading v-if="isInitialLoading || store.loadingLeague" />
     <div
       v-else-if="store.currentLeagueId"
-      :class="store.currentTab === 'Home' ? '' : 'container mx-auto'"
+      :class="store.currentTab === 'My Team' ? '' : 'container mx-auto'"
     >
       <div
         v-if="
