@@ -258,12 +258,16 @@ const signUp = async () => {
     toast.error("Please enter an email and password.");
   } else
     try {
-      await authStore.signUpWithPassword(
+      const { needsVerification } = await authStore.signUpWithPassword(
         signUpEmail.value,
         signUpPassword.value
       );
-      pendingSignUpEmail.value = signUpEmail.value;
-      toast.success("Account created. Enter the code from your email.");
+      if (needsVerification) {
+        pendingSignUpEmail.value = signUpEmail.value;
+        toast.success("Account created. Enter the code from your email.");
+      } else {
+        toast.success("Account created. You're signed in!");
+      }
       resetSignUpForm();
     } catch (error: unknown) {
       toast.error(

@@ -95,11 +95,14 @@ export const useAuthStore = defineStore("auth", () => {
     loading.value = true;
     try {
       const supabase = getSupabaseClient();
-      const { error } = await supabase.auth.signUp({
+      const { data, error } = await supabase.auth.signUp({
         email,
         password,
       });
       if (error) throw error;
+      // When "Confirm email" is off, Supabase returns a session and the user is
+      // signed in immediately — no email verification step needed.
+      return { needsVerification: !data.session };
     } finally {
       loading.value = false;
       await newUserAlert(email);
