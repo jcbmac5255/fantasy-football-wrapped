@@ -195,28 +195,10 @@ const data = {
               :key="childItem.title"
             >
               <SidebarMenuButton
-                v-if="childItem.title !== 'Home'"
-                as-child
-                :is-active="store.currentTab === childItem.title"
-                @click="changeTab(childItem.title)"
-                class="cursor-pointer"
-              >
-                <div>
-                  <component :is="childItem.icon" v-if="childItem.icon" />
-                  <p>
-                    {{ childItem.title }}
-                  </p>
-                </div>
-              </SidebarMenuButton>
-              <SidebarMenuButton
-                v-else-if="
-                  !store.currentLeagueId &&
-                  !route.query.leagueId &&
-                  !store.loadingLeague
-                "
                 as-child
                 :is-active="
-                  store.currentTab === childItem.title && route.path === '/'
+                  store.currentTab === childItem.title &&
+                  (childItem.title !== 'Home' || route.path === '/')
                 "
                 @click="changeTab(childItem.title)"
                 class="cursor-pointer"
