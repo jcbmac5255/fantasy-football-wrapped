@@ -32,7 +32,9 @@ import {
   Dices,
   FlaskConical,
   IdCard,
+  Shield,
 } from "lucide-vue-next";
+import { ADMIN_EMAIL } from "@/lib/config";
 import { Separator } from "../ui/separator";
 import { useStore } from "../../store/store";
 import { useRoute, useRouter } from "vue-router";
@@ -52,6 +54,11 @@ const currentUser = computed(() => {
     return authStore.user?.email?.match(/^[^@]+(?=@)/)?.[0] ?? "";
   }
 });
+
+const isAdmin = computed(
+  () =>
+    (authStore.user?.email ?? "").toLowerCase() === ADMIN_EMAIL.toLowerCase()
+);
 
 const closeMobileSidebar = () => {
   if (isMobile.value) {
@@ -292,6 +299,23 @@ const data = {
                       >({{ currentUser?.slice(0, 16)
                       }}<BadgeCheck class="mt-0.5 ml-2" :size="15" />)</span
                     >
+                  </div>
+                </SidebarMenuButton>
+              </router-link>
+            </SidebarMenuItem>
+            <SidebarMenuItem v-if="isAdmin">
+              <router-link
+                :to="{ path: '/admin', query: $route.query }"
+                class="cursor-pointer"
+                @click="RouteTabChange"
+              >
+                <SidebarMenuButton
+                  :is-active="route.path === '/admin'"
+                  as-child
+                >
+                  <div>
+                    <Shield />
+                    Admin
                   </div>
                 </SidebarMenuButton>
               </router-link>

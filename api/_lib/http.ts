@@ -46,11 +46,13 @@ export const getHeader = (
   return Array.isArray(value) ? value[0] : value;
 };
 
+export type AuthUser = { id: string; email: string | null };
+
 // Verify the caller's Supabase session by exchanging the bearer token for a
-// user. Returns the user id, or null if the token is missing/invalid.
-export const getAuthenticatedUserId = async (
+// user. Returns { id, email }, or null if the token is missing/invalid.
+export const getAuthenticatedUser = async (
   req: ApiRequest
-): Promise<string | null> => {
+): Promise<AuthUser | null> => {
   const authHeader = getHeader(req, "authorization");
   const token = authHeader?.startsWith("Bearer ")
     ? authHeader.slice("Bearer ".length)
@@ -70,11 +72,41 @@ export const getAuthenticatedUserId = async (
       },
     });
     if (!response.ok) return null;
-    const user = (await response.json()) as { id?: string };
-    return user.id ?? null;
+    const user = (await response.json()) as { id?: string; email?: string };
+    if (!user.id) return null;
+    return { id: user.id, email: user.email ?? null };
   } catch {
     return null;
   }
+};
+
+export const getAuthenticatedUserId = async (
+  req: ApiRequest
+): Promise<string | null> => {
+  const user = await getAuthenticatedUser(req);
+  return user?.id ?? null;
+};
+
+const ADMIN_EMAIL = (
+  process.env.ADMIN_EMAIL ?? "jcbmac5255@gmail.com"
+).toLowerCase();
+
+// Require the caller to be the commissioner/admin account. Returns the admin
+// user, or sends 401/403 and returns null.
+export const requireAdmin = async (
+  req: ApiRequest,
+  res: ApiResponse
+): Promise<AuthUser | null> => {
+  const user = await getAuthenticatedUser(req);
+  if (!user) {
+    sendJson(res, 401, { error: "Please sign in." });
+    return null;
+  }
+  if ((user.email ?? "").toLowerCase() !== ADMIN_EMAIL) {
+    sendJson(res, 403, { error: "Admin access required." });
+    return null;
+  }
+  return user;
 };
 
 // Require a logged-in user for premium endpoints. When the instance is running

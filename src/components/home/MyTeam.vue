@@ -1,49 +1,50 @@
 <script setup lang="ts">
-import { computed, ref } from "vue";
+import { computed, ref, watch } from "vue";
 import { TableDataType } from "../../types/types";
 import { useStore } from "../../store/store";
+import { useAuthStore } from "../../store/auth";
+import { getMyTeam } from "../../lib/admin";
 import { Card } from "../ui/card";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "../ui/select";
 
 const props = defineProps<{
   tableData: TableDataType[];
 }>();
 
 const store = useStore();
+const authStore = useAuthStore();
 
-const STORAGE_KEY = "myTeamId";
-const selectedId = ref<string>(localStorage.getItem(STORAGE_KEY) ?? "");
-const picking = ref(false);
+const loading = ref(false);
+const myRosterId = ref<number | null>(null);
+const active = ref<boolean | null>(null);
+
+// Load the signed-in user's admin-assigned team.
+watch(
+  () => authStore.isAuthenticated,
+  async (isAuthenticated) => {
+    if (!isAuthenticated) {
+      myRosterId.value = null;
+      active.value = null;
+      return;
+    }
+    loading.value = true;
+    const me = await getMyTeam();
+    myRosterId.value = me.rosterId;
+    active.value = me.active;
+    loading.value = false;
+  },
+  { immediate: true }
+);
 
 const teamName = (team: TableDataType) =>
   store.showUsernames
     ? team.username || "Ghost Roster"
     : team.name || team.username || "Ghost Roster";
 
-// Teams ordered by standing for the picker + rank display.
-const teams = computed(() =>
-  [...props.tableData].sort(
-    (a, b) => a.regularSeasonRank - b.regularSeasonRank
-  )
-);
-
 const myTeam = computed(() =>
-  props.tableData.find((team) => team.id === selectedId.value)
+  myRosterId.value === null
+    ? undefined
+    : props.tableData.find((team) => team.rosterId === myRosterId.value)
 );
-
-const onSelect = (id: unknown) => {
-  const value = String(id ?? "");
-  if (!value) return;
-  selectedId.value = value;
-  localStorage.setItem(STORAGE_KEY, value);
-  picking.value = false;
-};
 
 const round = (n: number, digits = 1) =>
   Number.isFinite(n) ? n.toFixed(digits) : "—";
@@ -58,7 +59,6 @@ const efficiency = computed(() =>
   myTeam.value ? `${(myTeam.value.managerEfficiency * 100).toFixed(1)}%` : "—"
 );
 
-// Most recent non-zero weekly scores (latest first), up to 6.
 const recentScores = computed(() => {
   const points = myTeam.value?.points ?? [];
   return points
@@ -80,13 +80,33 @@ const stats = computed(() => {
     { label: "Expected Wins", value: round(t.winsAgainstAll, 0) },
   ];
 });
+
+// Which message to show when there's no team dashboard to render.
+const emptyState = computed<{ title: string; body: string } | null>(() => {
+  if (myTeam.value) return null;
+  if (!authStore.isAuthenticated) {
+    return {
+      title: "Welcome to Engine Line",
+      body: "Sign in to see your team. Once the commissioner assigns your team, it'll show up here.",
+    };
+  }
+  if (active.value === false) {
+    return {
+      title: "Account inactive",
+      body: "Your account is marked inactive. Reach out to the commissioner if that's a mistake.",
+    };
+  }
+  return {
+    title: "No team assigned yet",
+    body: "You're signed in! The commissioner just needs to assign your team — check back soon.",
+  };
+});
 </script>
 
 <template>
   <div class="max-w-3xl px-4 mx-auto mt-4 mb-16">
-    <!-- Team picker (first visit, or when changing) -->
     <Card
-      v-if="!myTeam || picking"
+      v-if="emptyState"
       class="flex flex-col items-center gap-4 px-6 py-10 text-center"
     >
       <img
@@ -95,25 +115,12 @@ const stats = computed(() => {
         alt="Engine Line logo"
       />
       <div>
-        <h2 class="text-2xl font-bold">Welcome to Engine Line</h2>
-        <p class="mt-1 text-muted-foreground">
-          Pick your team to see your dashboard.
-        </p>
+        <h2 class="text-2xl font-bold">{{ emptyState.title }}</h2>
+        <p class="max-w-md mt-1 text-muted-foreground">{{ emptyState.body }}</p>
       </div>
-      <Select :model-value="selectedId" @update:model-value="onSelect">
-        <SelectTrigger class="w-64">
-          <SelectValue placeholder="Select your team" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem v-for="team in teams" :key="team.id" :value="team.id">
-            {{ teamName(team) }}
-          </SelectItem>
-        </SelectContent>
-      </Select>
     </Card>
 
-    <!-- Team dashboard -->
-    <div v-else>
+    <div v-else-if="myTeam">
       <Card class="flex items-center gap-4 p-5">
         <img
           v-if="myTeam.avatarImg"
@@ -130,12 +137,6 @@ const stats = computed(() => {
             >
           </p>
         </div>
-        <button
-          class="ml-auto text-sm underline text-muted-foreground hover:text-primary"
-          @click="picking = true"
-        >
-          Change team
-        </button>
       </Card>
 
       <div class="grid grid-cols-2 gap-3 mt-4 sm:grid-cols-3">

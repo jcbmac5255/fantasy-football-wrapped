@@ -8,6 +8,7 @@ import { LeagueInfoType } from "../types/types";
 import { toast } from "vue-sonner";
 import { getParsedStorageItem, isBoolean } from "@/lib/storage";
 import { LEAGUE_ID, BRAND_NAME } from "@/lib/config";
+import { getSettings } from "@/lib/admin";
 
 const Table = defineAsyncComponent(
   () => import("../components/standings/Table.vue")
@@ -37,22 +38,22 @@ const checkSystemTheme = () => {
 
 // This instance is locked to a single Sleeper league (see src/lib/config.ts).
 // Load it from cache when fresh (<24h), otherwise pull the latest from Sleeper.
-const loadLeague = async () => {
+const loadLeague = async (leagueId: string) => {
   const savedLeagues = getParsedStorageItem<LeagueInfoType[]>(
     "leagueInfo",
     [],
     { isValid: Array.isArray }
   );
-  const cached = savedLeagues.find((league) => league.leagueId === LEAGUE_ID);
+  const cached = savedLeagues.find((league) => league.leagueId === leagueId);
 
   if (cached && Date.now() - cached.lastUpdated < 86400000) {
     store.updateLeagueInfo(cached);
   } else {
     store.updateLoadingLeague(BRAND_NAME);
-    const league = await getData(LEAGUE_ID);
+    const league = await getData(leagueId);
     store.updateLeagueInfo(league);
     await inputLeague(
-      LEAGUE_ID,
+      leagueId,
       league.name,
       league.totalRosters,
       league.seasonType,
@@ -61,16 +62,20 @@ const loadLeague = async () => {
     );
     store.updateLoadingLeague("");
   }
-  store.updateCurrentLeagueId(LEAGUE_ID);
+  store.updateCurrentLeagueId(leagueId);
 };
 
 onMounted(async () => {
   try {
     checkSystemTheme();
-    if (!store.leagueIds.includes(LEAGUE_ID)) {
-      await loadLeague();
+    // The live league id comes from the Admin page (Supabase); fall back to the
+    // compiled-in default if settings aren't available.
+    const settings = await getSettings();
+    const leagueId = settings.leagueId || LEAGUE_ID;
+    if (!store.leagueIds.includes(leagueId)) {
+      await loadLeague(leagueId);
     } else {
-      store.updateCurrentLeagueId(LEAGUE_ID);
+      store.updateCurrentLeagueId(leagueId);
     }
   } catch {
     store.updateLoadingLeague("");

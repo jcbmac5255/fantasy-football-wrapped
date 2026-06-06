@@ -12,6 +12,7 @@ const Home = () => import("./views/Home.vue");
 const About = () => import("./views/About.vue");
 const ChangelogPage = () => import("./views/Changelog.vue");
 const Account = () => import("./views/Account.vue");
+const Admin = () => import("./views/Admin.vue");
 const NotFound = () => import("./views/404.vue");
 
 const siteUrl = "https://enginelineffl.com";
@@ -50,6 +51,15 @@ const routes = [
     meta: {
       title: "Account | Engine Line",
       description: "Manage your Engine Line account and subscription settings.",
+    },
+  },
+  {
+    path: "/admin",
+    component: Admin,
+    meta: {
+      title: "Admin | Engine Line",
+      description: "Engine Line league administration.",
+      requiresAuth: true,
     },
   },
   {

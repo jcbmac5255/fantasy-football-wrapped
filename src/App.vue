@@ -3,6 +3,8 @@ import { onMounted, watch, ref, computed } from "vue";
 import AppSidebar from "@/components/layout/AppSidebar.vue";
 import CardContainer from "./components/util/CardContainer.vue";
 import { useStore } from "./store/store";
+import { useAuthStore } from "./store/auth";
+import { registerMember } from "./lib/admin";
 import { LeagueInfoType } from "./types/types";
 import { inject } from "@vercel/analytics";
 import { useRoute, useRouter } from "vue-router";
@@ -22,6 +24,17 @@ import { toast } from "vue-sonner";
 const router = useRouter();
 const route = useRoute();
 const store = useStore();
+const authStore = useAuthStore();
+
+// Record every signed-in user as a league member so the admin can assign them
+// a team. Best-effort and idempotent (never resets an existing assignment).
+watch(
+  () => authStore.isAuthenticated,
+  (isAuthenticated) => {
+    if (isAuthenticated) registerMember();
+  },
+  { immediate: true }
+);
 
 const systemDarkMode = window.matchMedia(
   "(prefers-color-scheme: dark)"

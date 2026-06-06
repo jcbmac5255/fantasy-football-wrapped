@@ -33,6 +33,30 @@ export const insertRow = async (
   }
 };
 
+// Generic PostgREST select. `query` is a raw querystring, e.g.
+// "user_id=eq.123&select=roster_id,active". Returns [] when unconfigured.
+export const selectRows = async <T>(
+  table: string,
+  query = ""
+): Promise<T[]> => {
+  const config = getConfig();
+  if (!config) return [];
+  try {
+    const url = `${config.url}/rest/v1/${table}${query ? `?${query}` : ""}`;
+    const response = await fetch(url, {
+      headers: {
+        apikey: config.serviceKey,
+        Authorization: `Bearer ${config.serviceKey}`,
+      },
+    });
+    if (!response.ok) return [];
+    return (await response.json()) as T[];
+  } catch (error) {
+    console.error(`selectRows(${table}) failed:`, error);
+    return [];
+  }
+};
+
 export const countRows = async (table: string): Promise<number> => {
   const config = getConfig();
   if (!config) return 0;
