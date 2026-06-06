@@ -27,10 +27,8 @@ import {
   Users,
   Info,
   ScrollText,
-  ShieldUser,
   CircleUserRound,
   BadgeCheck,
-  Handshake,
   Dices,
   FlaskConical,
   IdCard,
@@ -271,40 +269,6 @@ const data = {
                   </div>
                 </SidebarMenuButton>
               </router-link>
-            </SidebarMenuItem>
-            <SidebarMenuItem>
-              <router-link
-                :to="{ path: '/privacy', query: $route.query }"
-                class="cursor-pointer"
-                @click="RouteTabChange"
-              >
-                <SidebarMenuButton
-                  as-child
-                  :is-active="route.path === '/privacy'"
-                >
-                  <div>
-                    <ShieldUser />
-                    Privacy Policy
-                  </div>
-                </SidebarMenuButton></router-link
-              >
-            </SidebarMenuItem>
-            <SidebarMenuItem>
-              <router-link
-                :to="{ path: '/terms', query: $route.query }"
-                class="cursor-pointer"
-                @click="RouteTabChange"
-              >
-                <SidebarMenuButton
-                  as-child
-                  :is-active="route.path === '/terms'"
-                >
-                  <div>
-                    <Handshake />
-                    Terms of Service
-                  </div>
-                </SidebarMenuButton></router-link
-              >
             </SidebarMenuItem>
             <SidebarMenuItem>
               <router-link

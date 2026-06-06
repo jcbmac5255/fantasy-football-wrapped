@@ -11,8 +11,6 @@ import { useSubscriptionStore } from "./store/subscription";
 const Home = () => import("./views/Home.vue");
 const About = () => import("./views/About.vue");
 const ChangelogPage = () => import("./views/Changelog.vue");
-const PrivacyPolicy = () => import("./views/PrivacyPolicy.vue");
-const Terms = () => import("./views/Terms.vue");
 const Account = () => import("./views/Account.vue");
 const NotFound = () => import("./views/404.vue");
 
@@ -44,24 +42,6 @@ const routes = [
     meta: {
       title: "Changelog | ffwrapped",
       description: "See the latest ffwrapped updates, features, and bug fixes",
-    },
-  },
-  {
-    path: "/privacy",
-    component: PrivacyPolicy,
-    meta: {
-      title: "Privacy Policy | ffwrapped",
-      description:
-        "Read the ffwrapped privacy policy and learn how league, account, and billing data are handled.",
-    },
-  },
-  {
-    path: "/terms",
-    component: Terms,
-    meta: {
-      title: "Terms of Service | ffwrapped",
-      description:
-        "Read the ffwrapped terms of service for using the fantasy football league analysis app.",
     },
   },
   {
