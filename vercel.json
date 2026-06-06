@@ -1,3 +1,9 @@
 {
+  "functions": {
+    "api/ai.ts": { "maxDuration": 60 },
+    "api/player.ts": { "maxDuration": 30 },
+    "api/log.ts": { "maxDuration": 30 },
+    "api/espn.ts": { "maxDuration": 30 }
+  },
   "rewrites": [{ "source": "/(.*)", "destination": "/" }]
 }
