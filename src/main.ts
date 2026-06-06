@@ -83,7 +83,9 @@ const router = createRouter({
   },
 });
 
-const staleChunkReloadKey = "stale-chunk-reload-attempted";
+// A lazy chunk failing to load almost always means a new version was deployed
+// and the old chunk is gone. Surface the refresh modal immediately instead of
+// leaving a blank page until the service worker eventually notices the update.
 const isDynamicImportError = (reason: unknown) => {
   const message = reason instanceof Error ? reason.message : String(reason);
 
@@ -95,24 +97,30 @@ const isDynamicImportError = (reason: unknown) => {
 };
 
 window.addEventListener("unhandledrejection", (event) => {
-  if (!isDynamicImportError(event.reason)) {
-    return;
+  if (isDynamicImportError(event.reason)) {
+    needRefresh.value = true;
   }
-
-  if (sessionStorage.getItem(staleChunkReloadKey)) {
-    return;
-  }
-
-  sessionStorage.setItem(staleChunkReloadKey, "true");
-  window.location.reload();
 });
 
-router.afterEach(() => {
-  sessionStorage.removeItem(staleChunkReloadKey);
+// Lazy route component failed to load (stale chunk after a deploy).
+router.onError((error) => {
+  if (isDynamicImportError(error)) {
+    needRefresh.value = true;
+  }
 });
 
 const pinia = createPinia();
 const app = createApp(App);
+
+// Lazy tab component failed to load (stale chunk after a deploy) -> prompt.
+app.config.errorHandler = (error, _instance, info) => {
+  if (isDynamicImportError(error)) {
+    needRefresh.value = true;
+    return;
+  }
+  console.error(error, info);
+};
+
 const ApexChart = defineAsyncComponent(() => import("vue3-apexcharts"));
 
 app.use(pinia);
@@ -165,6 +173,16 @@ const updateSW = registerSW({
   immediate: true,
   onNeedRefresh() {
     needRefresh.value = true;
+  },
+  onRegisteredSW(_swUrl, registration) {
+    if (!registration) return;
+    // Check for a new deploy every 60s and whenever the tab regains focus, so
+    // the refresh modal appears promptly instead of lagging behind the deploy.
+    const checkForUpdate = () => {
+      registration.update().catch(() => {});
+    };
+    setInterval(checkForUpdate, 60000);
+    window.addEventListener("focus", checkForUpdate);
   },
 });
 setUpdateSW(updateSW);
