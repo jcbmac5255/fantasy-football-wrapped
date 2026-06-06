@@ -56,13 +56,12 @@ const signOut = async () => {
 <template>
   <div class="flex items-center justify-center min-h-screen px-4 bg-background">
     <div class="w-full max-w-sm">
-      <div class="flex flex-col items-center mb-6 text-center">
+      <div class="flex flex-col items-center mb-4 text-center">
         <img
           src="/engine_line_ffl_transparent.png"
-          class="object-contain w-24 h-24"
+          class="object-contain w-64 h-64 sm:w-72 sm:h-72"
           alt="Engine Line logo"
         />
-        <h1 class="mt-3 text-2xl font-bold">Engine Line</h1>
       </div>
 
       <!-- Signed in but not yet provisioned -->
