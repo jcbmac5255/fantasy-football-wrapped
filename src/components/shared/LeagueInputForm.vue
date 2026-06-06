@@ -217,7 +217,7 @@ const espnS2Model = computed({
               </li>
             </ol>
             <p class="text-xs text-muted-foreground">
-              Treat these like a password. ffwrapped stores them locally in this
+              Treat these like a password. Engine Line stores them locally in this
               browser so private ESPN leagues can refresh later.
             </p>
           </DialogContent>

@@ -1,24 +1,8 @@
 <script setup lang="ts">
-import { getLeagueCount } from "@/api/api";
-import { watch, ref, onMounted } from "vue";
+import { watch } from "vue";
 import { useStore } from "@/store/store";
 import Switch from "@/components/ui/switch/Switch.vue";
-import { useRoute } from "vue-router";
 import Separator from "@/components/ui/separator/Separator.vue";
-
-const route = useRoute();
-const leagueCount = ref(13000); // initial load current unique league count value 5/31/26
-
-onMounted(async () => {
-  const leagueId = route.query.leagueId;
-  if (!leagueId) {
-    const data = await getLeagueCount();
-    const newCount = data?.league_id_count;
-    if (newCount) {
-      leagueCount.value = newCount;
-    }
-  }
-});
 
 const store = useStore();
 
@@ -37,8 +21,8 @@ watch(
       <div class="max-w-4xl text-base leading-relaxed">
         <div class="space-y-4">
           <p class="text-base leading-relaxed">
-            Welcome to ffwrapped, a platform designed to provide insightful data
-            and charts for your
+            Engine Line is the private dashboard for our fantasy football league,
+            powered by
             <a
               aria-label="Link to sleeper website"
               class="font-medium text-primary hover:underline"
@@ -46,90 +30,28 @@ watch(
               target="_blank"
               rel="noopener noreferrer"
               >Sleeper</a
-            >
-            and
-            <a
-              aria-label="Link to espn fantasy website"
-              class="font-medium text-primary hover:underline"
-              href="https://www.espn.com/fantasy/football/"
-              target="_blank"
-              rel="noopener noreferrer"
-              >ESPN</a
-            >
-            fantasy football leagues.
+            >. It turns our league's data into standings, power rankings, playoff
+            odds, weekly reports, draft grades, and more.
           </p>
           <p class="text-base leading-relaxed">
-            The source code can be found on
+            Questions or suggestions? Send an
+            <a
+              href="mailto:jcbmac5255@gmail.com?subject=Engine Line"
+              class="font-medium text-primary hover:underline"
+              >email</a
+            >. Built on the open-source
             <a
               aria-label="Link to github repository"
               class="font-medium text-primary hover:underline"
               href="https://github.com/kt474/fantasy-football-wrapped"
               target="_blank"
               rel="noopener noreferrer"
-              >Github</a
-            >. To report a bug or request new features, please join our
-            <a
-              aria-label="Discord link"
-              class="font-medium text-primary hover:underline"
-              href="https://discord.gg/sSVwNhyv7U"
-              target="_blank"
-              rel="noopener noreferrer"
-              >Discord,</a
+              >ffwrapped</a
             >
-            send an
-            <a
-              href="mailto:jcbmac5255@gmail.com?subject=ffwrapped request"
-              class="font-medium text-primary hover:underline"
-              >email,</a
-            >
-            or reach out on
-            <a
-              aria-label="Link to twitter"
-              class="font-medium text-primary hover:underline"
-              href="https://twitter.com/kevkevkt"
-              target="_blank"
-              rel="noopener noreferrer"
-              >Twitter</a
-            >. Any suggestions are welcome! I also have a
-            <a
-              aria-label="Link to ffwrapped blog"
-              class="font-medium text-primary hover:underline"
-              href="https://blog.ffwrapped.com"
-              target="_blank"
-              rel="noopener noreferrer"
-              >ffwrapped blog</a
-            >
-            where I write about fantasy football statistics and programming.
+            project.
           </p>
-          <p class="text-base leading-relaxed">
-            I will always try to keep this site free (and ad free) but as the
-            userbase grows, the hosting and weekly AI recap costs also grow, so
-            if you find value in ffwrapped, any donations are greatly
-            appreciated. If you’d like to support ffwrapped beyond donations,
-            consider subscribing to the
-            <router-link
-              :to="{ path: '/account', query: $route.query }"
-              class="font-medium cursor-pointer text-primary hover:underline"
-            >
-              Premium tier</router-link
-            >. Your support helps keep the platform running and improving for
-            everyone.
-          </p>
-          <div class="flex flex-wrap justify-evenly sm:flex-nowrap">
-            <a
-              href="https://www.buymeacoffee.com/kt474"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              <img
-                src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png"
-                alt="Buy Me A Coffee"
-                style="height: 55px !important; width: 217px !important"
-                class="mx-auto my-4"
-            /></a>
-          </div>
         </div>
-        <div class="flex items-center justify-between mt-2">
+        <div class="flex items-center justify-between mt-6">
           <h3 class="text-3xl font-semibold">Settings</h3>
         </div>
         <div class="flex items-center mt-4 space-x-2">
@@ -139,18 +61,9 @@ watch(
           />
           <label>Show usernames instead of team names</label>
         </div>
-        <div class="flex items-center justify-between mt-4">
-          <h3 class="text-3xl font-semibold">League Count</h3>
-        </div>
-        <div>
-          <p class="mt-2 text-xl font-medium">
-            {{ leagueCount.toLocaleString() }}
-            <span class="text-base font-normal">Fantasy leagues added</span>
-          </p>
-        </div>
-        <Separator class="mt-3" />
+        <Separator class="mt-6" />
         <p class="mt-2 text-sm text-muted-foreground">
-          &copy; 2024-2026. Kevin Tian
+          &copy; 2024-2026 Engine Line
         </p>
       </div>
     </div>

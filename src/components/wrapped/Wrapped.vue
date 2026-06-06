@@ -53,7 +53,7 @@ const share = async () => {
   try {
     await navigator.share({
       title: document.title,
-      text: "ffwrapped 2025",
+      text: "Engine Line 2025",
       url: window.location.href,
     });
   } catch (error) {
@@ -2433,13 +2433,13 @@ watch(
       <WrappedSlide bg-color="bg-gray-900" alignment="center">
         <div class="space-y-6">
           <h1 class="mb-4 text-3xl font-bold text-white sm:text-5xl">
-            Thank you for using ffwrapped!
+            Thank you for using Engine Line!
           </h1>
 
           <div class="text-gray-200">
             <!-- Hardcoding data from 12/29/25 -->
             <p class="mb-6 text-base sm:mb-8 sm:text-lg">
-              Here's a look at the 5600+ leagues that used ffwrapped in 2025.
+              Here's a look at the 5600+ leagues that used Engine Line in 2025.
             </p>
             <OverallStats />
             <p class="my-4 text-base sm:text-lg">See you next season ❤️</p>

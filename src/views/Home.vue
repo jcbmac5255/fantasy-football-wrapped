@@ -2,182 +2,25 @@
 import { defineAsyncComponent, onMounted, ref } from "vue";
 
 import SkeletonLoading from "../components/util/SkeletonLoading.vue";
-import UserLeagueList from "../components/home/UserLeagueList.vue";
-import { fakePoints, fakeRosters, fakeUsers } from "../api/fakeLeague";
-import Input from "@/components/ui/input/Input.vue";
-import { getLeagueKey, useStore } from "../store/store";
+import { useStore } from "../store/store";
 import { getData, inputLeague } from "../api/api";
-import {
-  getEspnErrorMessage,
-  getEspnLeagueInfo,
-  getSavedEspnAuth,
-} from "@/api/espnApi";
-import { getLeague } from "../api/sleeperApi";
 import { LeagueInfoType } from "../types/types";
-import { useRoute, useRouter } from "vue-router";
 import { toast } from "vue-sonner";
-import { getParsedStorageItem, isBoolean, isRecord } from "@/lib/storage";
+import { getParsedStorageItem, isBoolean } from "@/lib/storage";
+import { LEAGUE_ID, BRAND_NAME } from "@/lib/config";
 
 const Table = defineAsyncComponent(
   () => import("../components/standings/Table.vue")
 );
 
-const route = useRoute();
-const router = useRouter();
 const store = useStore();
 
-const showLoading = ref(false);
 const isInitialLoading = ref(true);
-const cachedGoogleSitelinks = ["1218604624068497408", "1057743221285101568"];
 
 const systemDarkMode = window.matchMedia(
   "(prefers-color-scheme: dark)"
 ).matches;
 const clicked = ref(systemDarkMode);
-
-onMounted(async () => {
-  try {
-    checkSystemTheme();
-    const savedLeagues = getParsedStorageItem<LeagueInfoType[]>(
-      "leagueInfo",
-      [],
-      { isValid: Array.isArray }
-    );
-    if (savedLeagues.length > 0) {
-      await Promise.all(
-        savedLeagues.map(async (league: LeagueInfoType) => {
-          if (!store.leagueIds.includes(getLeagueKey(league))) {
-            const currentTime = new Date().getTime();
-            const diff = currentTime - league.lastUpdated;
-            if (diff > 86400000) {
-              // 1 day
-              showLoading.value = true;
-              const currentData = getParsedStorageItem<
-                Record<string, unknown>
-              >("originalData", {}, { isValid: isRecord });
-              if (Object.keys(currentData).length > 0) {
-                delete currentData[getLeagueKey(league)];
-                localStorage.setItem(
-                  "originalData",
-                  JSON.stringify(currentData)
-                );
-              }
-              store.updateLoadingLeague(league.name);
-              if (league.platform === "espn") {
-                try {
-                  const refreshedData = await getEspnLeagueInfo(
-                    league.season,
-                    league.leagueId,
-                    getSavedEspnAuth(league.season, league.leagueId)
-                  );
-                  store.updateLeagueInfo(refreshedData);
-                } catch (error) {
-                  toast.error(getEspnErrorMessage(error));
-                  store.updateLeagueInfo(league);
-                }
-              } else {
-                const refreshedData = await getData(league.leagueId);
-                store.updateLeagueInfo(refreshedData);
-                await inputLeague(
-                  league.leagueId,
-                  league.name,
-                  league.totalRosters,
-                  league.seasonType,
-                  league.season,
-                  "sleeper"
-                );
-              }
-              showLoading.value = false;
-            } else {
-              store.updateLeagueInfo(league);
-            }
-          }
-        })
-      );
-      store.updateCurrentLeagueId(
-        localStorage.getItem("currentLeagueId") ?? ""
-      );
-      store.updateLoadingLeague("");
-    }
-    const leagueId = Array.isArray(route.query.leagueId)
-      ? route.query.leagueId[0]
-      : route.query.leagueId;
-    const season = Array.isArray(route.query.season)
-      ? route.query.season[0]
-      : route.query.season;
-    const isEspnLeague = "espn" in route.query;
-    const routeLeagueKey =
-      isEspnLeague && leagueId && season
-        ? getLeagueKey({ platform: "espn", leagueId, season })
-        : leagueId;
-    // sometimes on refresh the leagueId in the URL becomes undefined
-    if (
-      leagueId &&
-      routeLeagueKey &&
-      !store.leagueIds.includes(routeLeagueKey) &&
-      !cachedGoogleSitelinks.includes(leagueId)
-    ) {
-      if (isEspnLeague) {
-        if (!season) {
-          toast.error("Missing ESPN season");
-          return;
-        }
-        store.updateLoadingLeague("ESPN League");
-        try {
-          const league = await getEspnLeagueInfo(
-            season,
-            leagueId,
-            getSavedEspnAuth(season, leagueId)
-          );
-          store.updateLeagueInfo(league);
-          store.updateCurrentLeagueId(getLeagueKey(league));
-          store.currentTab = "Standings";
-          localStorage.setItem("currentTab", "Standings");
-        } catch (error) {
-          toast.error(getEspnErrorMessage(error));
-        }
-        store.updateLoadingLeague("");
-        return;
-      }
-
-      const checkInput = await getLeague(leagueId);
-      if (checkInput["name"]) {
-        store.updateCurrentLeagueId(leagueId);
-        store.updateLoadingLeague(checkInput["name"]);
-        const league = await getData(leagueId);
-        store.updateLeagueInfo(league);
-        await inputLeague(
-          leagueId,
-          league.name,
-          league.totalRosters,
-          league.seasonType,
-          league.season,
-          "sleeper"
-        );
-        store.currentTab = "Standings";
-        localStorage.setItem("currentTab", "Standings");
-        store.updateLoadingLeague("");
-      } else {
-        toast.error("Invalid League ID");
-      }
-    } else if (leagueId === "undefined") {
-      localStorage.removeItem("currentLeagueId");
-      localStorage.removeItem("leagueInfo");
-      toast.error("Error fetching data. Please try refreshing the page.");
-      // these leagues are somehow being cached in google sitelinks
-    } else if (leagueId && cachedGoogleSitelinks.includes(leagueId)) {
-      const newQuery = { ...route.query };
-      delete newQuery.leagueId;
-      router.replace({ path: route.path, query: newQuery });
-    } else if (routeLeagueKey && store.leagueIds.includes(routeLeagueKey)) {
-      store.updateCurrentLeagueId(routeLeagueKey);
-    }
-  } catch {
-    toast.error("Error fetching data. Please try refreshing the page.");
-  } finally {
-    isInitialLoading.value = false;
-  }
-});
 
 const checkSystemTheme = () => {
   const savedDarkMode = localStorage.getItem("darkMode");
@@ -191,44 +34,74 @@ const checkSystemTheme = () => {
     store.updateDarkMode(clicked.value);
   }
 };
+
+// This instance is locked to a single Sleeper league (see src/lib/config.ts).
+// Load it from cache when fresh (<24h), otherwise pull the latest from Sleeper.
+const loadLeague = async () => {
+  const savedLeagues = getParsedStorageItem<LeagueInfoType[]>(
+    "leagueInfo",
+    [],
+    { isValid: Array.isArray }
+  );
+  const cached = savedLeagues.find((league) => league.leagueId === LEAGUE_ID);
+
+  if (cached && Date.now() - cached.lastUpdated < 86400000) {
+    store.updateLeagueInfo(cached);
+  } else {
+    store.updateLoadingLeague(BRAND_NAME);
+    const league = await getData(LEAGUE_ID);
+    store.updateLeagueInfo(league);
+    await inputLeague(
+      LEAGUE_ID,
+      league.name,
+      league.totalRosters,
+      league.seasonType,
+      league.season,
+      "sleeper"
+    );
+    store.updateLoadingLeague("");
+  }
+  store.updateCurrentLeagueId(LEAGUE_ID);
+};
+
+onMounted(async () => {
+  try {
+    checkSystemTheme();
+    if (!store.leagueIds.includes(LEAGUE_ID)) {
+      await loadLeague();
+    } else {
+      store.updateCurrentLeagueId(LEAGUE_ID);
+    }
+  } catch {
+    store.updateLoadingLeague("");
+    toast.error("Error loading the league. Please try refreshing the page.");
+  } finally {
+    isInitialLoading.value = false;
+  }
+});
 </script>
 
 <template>
   <div>
-    <SkeletonLoading v-if="isInitialLoading" />
-    <div v-else>
-      <SkeletonLoading v-if="showLoading || store.loadingLeague" />
+    <SkeletonLoading v-if="isInitialLoading || store.loadingLeague" />
+    <div
+      v-else-if="store.currentLeagueId"
+      :class="store.currentTab === 'Home' ? '' : 'container mx-auto'"
+    >
       <div
-        v-else-if="store.currentLeagueId"
-        :class="store.currentTab === 'Home' ? '' : 'container mx-auto'"
+        v-if="
+          store.leagueUsers[store.currentLeagueIndex] &&
+          !store.loadingUserLeagues
+        "
       >
-        <Input v-if="store.showInput" class="custom-input-width" />
-        <div v-if="store.showLeaguesList" class="container mx-auto">
-          <UserLeagueList />
-        </div>
-        <div
-          v-if="
-            store.leagueUsers[store.currentLeagueIndex] &&
-            !store.loadingUserLeagues
-          "
-        >
-          <Table
-            :users="store.leagueUsers[store.currentLeagueIndex]"
-            :rosters="store.leagueRosters[store.currentLeagueIndex]"
-            :points="store.weeklyPoints[store.currentLeagueIndex]"
-          />
-        </div>
-        <SkeletonLoading v-else />
+        <Table
+          :users="store.leagueUsers[store.currentLeagueIndex]"
+          :rosters="store.leagueRosters[store.currentLeagueIndex]"
+          :points="store.weeklyPoints[store.currentLeagueIndex]"
+        />
       </div>
-      <div v-else-if="store.showLeaguesList" class="container mx-auto">
-        <UserLeagueList />
-      </div>
-      <div
-        v-else
-        :class="store.currentTab === 'Home' ? '' : 'container mx-auto'"
-      >
-        <Table :users="fakeUsers" :rosters="fakeRosters" :points="fakePoints" />
-      </div>
+      <SkeletonLoading v-else />
     </div>
+    <SkeletonLoading v-else />
   </div>
 </template>

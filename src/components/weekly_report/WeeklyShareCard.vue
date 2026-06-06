@@ -57,7 +57,7 @@ const benchPlayersForCard = computed(() => props.benchPlayers.slice(0, 4));
           width="24"
           src="../../assets/football-helmet.webp"
           class="h-6"
-          alt="ffwrapped logo"
+          alt="Engine Line logo"
         />
         <span class="text-2xl font-semibold tracking-tight">
           <span class="text-primary">ff</span>wrapped

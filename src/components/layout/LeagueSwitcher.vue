@@ -206,8 +206,8 @@ if (typeof window !== "undefined") {
 const sharePopup = async () => {
   try {
     await navigator.share({
-      title: `${currentLeague.value.name} ffwrapped`,
-      text: "ffwrapped",
+      title: `${currentLeague.value.name} Engine Line`,
+      text: "Engine Line",
       url: window.location.href,
     });
   } catch (error) {

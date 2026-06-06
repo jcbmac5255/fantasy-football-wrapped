@@ -16,7 +16,7 @@ const NotFound = () => import("./views/404.vue");
 
 const siteUrl = "https://enginelineffl.com";
 const defaultMeta = {
-  title: "Fantasy Football Wrapped",
+  title: "Engine Line",
   description:
     "Analyze your fantasy football league with power rankings, roster insights, custom weekly reports, playoff odds, and much more.",
 };
@@ -31,25 +31,25 @@ const routes = [
     path: "/about",
     component: About,
     meta: {
-      title: "About | ffwrapped",
+      title: "About | Engine Line",
       description:
-        "Learn about ffwrapped, a tool for analyzing fantasy football leagues.",
+        "Learn about Engine Line, a tool for analyzing fantasy football leagues.",
     },
   },
   {
     path: "/changelog",
     component: ChangelogPage,
     meta: {
-      title: "Changelog | ffwrapped",
-      description: "See the latest ffwrapped updates, features, and bug fixes",
+      title: "Changelog | Engine Line",
+      description: "See the latest Engine Line updates, features, and bug fixes",
     },
   },
   {
     path: "/account",
     component: Account,
     meta: {
-      title: "Account | ffwrapped",
-      description: "Manage your ffwrapped account and subscription settings.",
+      title: "Account | Engine Line",
+      description: "Manage your Engine Line account and subscription settings.",
     },
   },
   {
@@ -57,9 +57,9 @@ const routes = [
     name: "NotFound",
     component: NotFound,
     meta: {
-      title: "Page Not Found | ffwrapped",
+      title: "Page Not Found | Engine Line",
       description:
-        "The page you are looking for could not be found on ffwrapped.",
+        "The page you are looking for could not be found on Engine Line.",
     },
   },
 ];

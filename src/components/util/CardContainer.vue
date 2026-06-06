@@ -1,56 +1,17 @@
 <script setup lang="ts">
-import LeagueSwitcher from "../layout/LeagueSwitcher.vue";
-import Dialog from "../layout/Dialog.vue";
-import { Button } from "../ui/button";
-import { useRoute } from "vue-router";
-
-import { useStore } from "../../store/store";
 import { computed } from "vue";
+import { useStore } from "../../store/store";
 
 const store = useStore();
-const route = useRoute();
 
-const leagues = computed(() => {
-  return store.leagueInfo;
-});
-
-const hasLeagueIdInUrl = computed(() => {
-  const leagueId = route.query.leagueId;
-  const normalizedLeagueId = Array.isArray(leagueId) ? leagueId[0] : leagueId;
-  return Boolean(normalizedLeagueId) && normalizedLeagueId !== "undefined";
-});
-
-const showAddLeagueButton = computed(() => {
-  const isHomeTabOnHomeRoute =
-    route.path === "/" && store.currentTab === "Home";
-  return !store.loadingLeague && !hasLeagueIdInUrl.value && !isHomeTabOnHomeRoute;
-});
+const leagueName = computed(
+  () => store.leagueInfo[store.currentLeagueIndex]?.name ?? ""
+);
 </script>
 <template>
   <div class="flex flex-1 min-w-0">
-    <div class="flex w-full overflow-auto no-scrollbar">
-      <LeagueSwitcher
-        v-if="hasLeagueIdInUrl && route.path === '/'"
-        :leagues="leagues"
-      />
-      <div
-        class="relative flex items-center w-full"
-        v-else-if="showAddLeagueButton"
-      >
-        <Dialog>
-          <template #trigger>
-            <Button type="button" size="sm" class="text-sm font-medium ml-1.5">
-              Add League
-            </Button>
-          </template>
-        </Dialog>
-        <p
-          v-if="route.path === '/' && !store.loadingLeague"
-          class="absolute inset-x-0 font-medium text-right pointer-events-none sm:ml-10 sm:text-center whitespace-nowrap"
-        >
-          Demo League
-        </p>
-      </div>
+    <div class="flex items-center w-full overflow-auto no-scrollbar">
+      <p class="font-medium truncate ml-1.5">{{ leagueName }}</p>
     </div>
   </div>
 </template>

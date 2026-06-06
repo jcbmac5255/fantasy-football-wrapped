@@ -13,8 +13,8 @@ export default defineConfig(({ mode }) => ({
       registerType: "autoUpdate",
       includeAssets: ["favicon.ico", "robots.txt", "apple-touch-icon.png"],
       manifest: {
-        name: "ffwrapped",
-        short_name: "ffwrapped",
+        name: "Engine Line",
+        short_name: "Engine Line",
         description: "Fantasy football league insights",
         theme_color: "#f8fafc",
         display: "standalone",

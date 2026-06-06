@@ -162,16 +162,13 @@ const data = {
         <SidebarMenuItem>
           <div class="flex items-center ml-2 mt-1.5">
             <img
-              height="24"
-              width="24"
-              src="../../assets/football-helmet.webp"
-              class="h-6"
-              alt="ffwrapped logo"
+              src="/engine_line_ffl_transparent.png"
+              class="h-8 w-8 object-contain"
+              alt="Engine Line logo"
             />
-            <!-- Icon credit to https://www.flaticon.com/free-icons/american-football -->
             <span
-              class="self-center -mb-1.5 ml-2.5 custom-font whitespace-nowrap"
-              ><span class="text-primary">ff</span>wrapped</span
+              class="self-center ml-2.5 font-semibold whitespace-nowrap"
+              >Engine Line</span
             >
           </div>
         </SidebarMenuItem>

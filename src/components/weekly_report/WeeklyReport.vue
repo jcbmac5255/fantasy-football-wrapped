@@ -515,7 +515,7 @@ const downloadReportImage = async () => {
     });
     const link = document.createElement("a");
     link.href = dataUrl;
-    link.download = `ffwrapped-week-${currentWeek.value}.png`;
+    link.download = `engine-line-week-${currentWeek.value}.png`;
     link.click();
     toast.success("Weekly report image downloaded");
   } catch (error) {

@@ -98,7 +98,7 @@ const Wrapped = defineAsyncComponent(() => import("../wrapped/Wrapped.vue"));
 const FakeWrapped = defineAsyncComponent(
   () => import("../wrapped/FakeWrapped.vue")
 );
-const Intro = defineAsyncComponent(() => import("../home/Intro.vue"));
+const MyTeam = defineAsyncComponent(() => import("../home/MyTeam.vue"));
 
 const ScheduleSimulator = defineAsyncComponent(
   () => import("../schedule_simulator/ScheduleSimulator.vue")
@@ -729,20 +729,7 @@ const getTeamName = (tableDataItem: TableDataType) => {
       <FakeWrapped v-else />
     </div>
     <div v-if="store.currentTab === 'Home'">
-      <Intro>
-        <template #header>
-          <TransactionsChart />
-          <Waivers class="text-left" />
-          <Projections />
-          <ExpectedWinsChart :tableData="tableData" />
-          <PowerRankingData
-            class="mb-4"
-            :tableData="tableData"
-            :regularSeasonLength="15"
-            :totalRosters="10"
-          />
-        </template>
-      </Intro>
+      <MyTeam :tableData="tableData" />
     </div>
   </div>
 </template>

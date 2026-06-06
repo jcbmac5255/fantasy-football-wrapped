@@ -223,7 +223,7 @@ const canGeneratePremium = computed(
           </div>
           <AudioRecap
             :recap-text="rawPremiumWeeklyReport"
-            :file-name="`ffwrapped-week-${currentWeek}-recap.mp3`"
+            :file-name="`engine-line-week-${currentWeek}-recap.mp3`"
           />
         </div>
         <div v-else>

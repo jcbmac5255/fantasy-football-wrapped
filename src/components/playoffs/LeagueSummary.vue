@@ -177,7 +177,7 @@ const copyReport = () => {
         AI-generated summary. Information provided may not always be accurate.
       </p>
       <p class="mb-4 text-xs text-muted-foreground">
-        If you've enjoyed using ffwrapped this season please consider
+        If you've enjoyed using Engine Line this season please consider
         <a
           aria-label="buymeacoffee donation page"
           class="text-primary hover:underline"
