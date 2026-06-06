@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import { onMounted, watch, ref, computed } from "vue";
+import { onMounted, onBeforeUnmount, watch, ref, computed } from "vue";
 import AppSidebar from "@/components/layout/AppSidebar.vue";
 import CardContainer from "./components/util/CardContainer.vue";
 import { useStore } from "./store/store";
 import { useAuthStore } from "./store/auth";
 import { useMembershipStore } from "./store/membership";
+import { sendHeartbeat } from "./lib/admin";
 import AuthLanding from "./views/AuthLanding.vue";
 import { LeagueInfoType } from "./types/types";
 import { inject } from "@vercel/analytics";
@@ -42,6 +43,22 @@ const booting = computed(
     !authStore.initialized ||
     (authStore.isAuthenticated && !membership.loaded)
 );
+
+// Presence heartbeat: mark the signed-in user as currently online (updates
+// last_seen) every 45s while the tab is visible. Powers the Admin online list.
+let heartbeatTimer: ReturnType<typeof setInterval> | undefined;
+const beat = () => {
+  if (authStore.isAuthenticated && document.visibilityState === "visible") {
+    sendHeartbeat();
+  }
+};
+onMounted(() => {
+  beat();
+  heartbeatTimer = setInterval(beat, 45000);
+});
+onBeforeUnmount(() => {
+  if (heartbeatTimer) clearInterval(heartbeatTimer);
+});
 
 const systemDarkMode = window.matchMedia(
   "(prefers-color-scheme: dark)"

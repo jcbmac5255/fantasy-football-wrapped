@@ -8,6 +8,19 @@ export type LeagueMember = {
   email: string | null;
   roster_id: number | null;
   active: boolean | null;
+  last_login: string | null;
+  last_seen: string | null;
+};
+
+// Ping that the signed-in user is currently on the site (updates last_seen).
+export const sendHeartbeat = async (): Promise<void> => {
+  try {
+    await authenticatedFetch(`${ADMIN_URL}?action=heartbeat`, {
+      method: "POST",
+    });
+  } catch {
+    // best-effort
+  }
 };
 
 // Public: the live Sleeper league id (admin-editable, falls back to config).

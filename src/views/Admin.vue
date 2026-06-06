@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from "vue";
+import { computed, onBeforeUnmount, onMounted, ref } from "vue";
 import { useStore } from "@/store/store";
 import { useAuthStore } from "@/store/auth";
 import { ADMIN_EMAIL, LEAGUE_ID } from "@/lib/config";
@@ -125,6 +125,37 @@ const onTeamChange = (member: LeagueMember, value: unknown) => {
   saveMember(member, { rosterId: str === "" ? null : Number(str) });
 };
 
+// ---- presence (online status + last login) ----
+const now = ref(Date.now());
+
+const isOnline = (member: LeagueMember) =>
+  member.last_seen
+    ? now.value - new Date(member.last_seen).getTime() < 120_000
+    : false;
+
+const timeAgo = (iso: string | null) => {
+  if (!iso) return "never";
+  const minutes = Math.floor((now.value - new Date(iso).getTime()) / 60_000);
+  if (minutes < 1) return "just now";
+  if (minutes < 60) return `${minutes}m ago`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours}h ago`;
+  const days = Math.floor(hours / 24);
+  if (days < 7) return `${days}d ago`;
+  return new Date(iso).toLocaleDateString();
+};
+
+let tickTimer: ReturnType<typeof setInterval> | undefined;
+let refreshTimer: ReturnType<typeof setInterval> | undefined;
+onMounted(() => {
+  tickTimer = setInterval(() => (now.value = Date.now()), 15_000);
+  refreshTimer = setInterval(() => loadMembers(), 30_000);
+});
+onBeforeUnmount(() => {
+  if (tickTimer) clearInterval(tickTimer);
+  if (refreshTimer) clearInterval(refreshTimer);
+});
+
 const removeMember = async (member: LeagueMember) => {
   if (
     !window.confirm(
@@ -206,6 +237,7 @@ const removeMember = async (member: LeagueMember) => {
               <thead class="text-left text-muted-foreground">
                 <tr class="border-b">
                   <th class="py-2 pr-4 font-medium">Email</th>
+                  <th class="py-2 pr-4 font-medium">Status</th>
                   <th class="py-2 pr-4 font-medium">Team</th>
                   <th class="py-2 pr-4 font-medium">Active</th>
                   <th class="py-2 font-medium"></th>
@@ -218,6 +250,18 @@ const removeMember = async (member: LeagueMember) => {
                   class="border-b last:border-0"
                 >
                   <td class="py-3 pr-4 align-middle">{{ member.email }}</td>
+                  <td class="py-3 pr-4 align-middle whitespace-nowrap">
+                    <span
+                      v-if="isOnline(member)"
+                      class="inline-flex items-center gap-1.5 font-medium text-green-600 dark:text-green-400"
+                    >
+                      <span class="w-2 h-2 rounded-full bg-green-500"></span>
+                      Online
+                    </span>
+                    <span v-else class="text-muted-foreground">
+                      {{ timeAgo(member.last_login) }}
+                    </span>
+                  </td>
                   <td class="py-3 pr-4 align-middle">
                     <Select
                       :model-value="

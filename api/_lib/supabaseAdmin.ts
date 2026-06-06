@@ -53,6 +53,29 @@ export const deleteRows = async (
   }
 };
 
+// Update existing rows matching a PostgREST filter (never inserts).
+export const updateRows = async (
+  table: string,
+  query: string,
+  patch: Record<string, unknown>
+): Promise<void> => {
+  const config = getConfig();
+  if (!config || !query) return;
+  try {
+    await fetch(`${config.url}/rest/v1/${table}?${query}`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+        apikey: config.serviceKey,
+        Authorization: `Bearer ${config.serviceKey}`,
+      },
+      body: JSON.stringify(patch),
+    });
+  } catch (error) {
+    console.error(`updateRows(${table}) failed:`, error);
+  }
+};
+
 // Generic PostgREST select. `query` is a raw querystring, e.g.
 // "user_id=eq.123&select=roster_id,active". Returns [] when unconfigured.
 export const selectRows = async <T>(

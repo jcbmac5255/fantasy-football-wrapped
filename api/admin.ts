@@ -6,7 +6,12 @@ import {
   requireAdmin,
   sendJson,
 } from "./_lib/http.js";
-import { deleteRows, insertRow, selectRows } from "./_lib/supabaseAdmin.js";
+import {
+  deleteRows,
+  insertRow,
+  selectRows,
+  updateRows,
+} from "./_lib/supabaseAdmin.js";
 
 // Admin + membership API, selected via ?action=.
 //   GET  ?action=getSettings                      (public)  -> { leagueId }
@@ -20,6 +25,8 @@ type MemberRow = {
   email: string | null;
   roster_id: number | null;
   active: boolean | null;
+  last_login: string | null;
+  last_seen: string | null;
 };
 
 export default async function handler(req: ApiRequest, res: ApiResponse) {
@@ -46,11 +53,14 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
       "league_members",
       `user_id=eq.${encodeURIComponent(user.id)}&select=user_id&limit=1`
     );
+    const now = new Date().toISOString();
     if (existing.length > 0) {
-      // Existing member: only refresh email; preserve their team + active flag.
+      // Existing member: refresh email + login time; preserve team + active.
       await insertRow("league_members", {
         user_id: user.id,
         email: user.email,
+        last_login: now,
+        last_seen: now,
       });
     } else {
       // New member: start inactive until the admin activates + assigns a team.
@@ -58,8 +68,22 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
         user_id: user.id,
         email: user.email,
         active: false,
+        last_login: now,
+        last_seen: now,
       });
     }
+    return sendJson(res, 200, { ok: true });
+  }
+
+  if (action === "heartbeat") {
+    if (rejectWrongMethod(req, res, "POST")) return;
+    const user = await getAuthenticatedUser(req);
+    if (!user) return sendJson(res, 401, { error: "Please sign in." });
+    await updateRows(
+      "league_members",
+      `user_id=eq.${encodeURIComponent(user.id)}`,
+      { last_seen: new Date().toISOString() }
+    );
     return sendJson(res, 200, { ok: true });
   }
 
@@ -97,7 +121,7 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
     if (!(await requireAdmin(req, res))) return;
     const members = await selectRows<MemberRow>(
       "league_members",
-      "select=user_id,email,roster_id,active&order=email.asc"
+      "select=user_id,email,roster_id,active,last_login,last_seen&order=email.asc"
     );
     return sendJson(res, 200, { members });
   }
