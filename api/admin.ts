@@ -42,11 +42,24 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
     if (rejectWrongMethod(req, res, "POST")) return;
     const user = await getAuthenticatedUser(req);
     if (!user) return sendJson(res, 401, { error: "Please sign in." });
-    // Only set id + email so an existing member's team/active flag is preserved.
-    await insertRow("league_members", {
-      user_id: user.id,
-      email: user.email,
-    });
+    const existing = await selectRows<MemberRow>(
+      "league_members",
+      `user_id=eq.${encodeURIComponent(user.id)}&select=user_id&limit=1`
+    );
+    if (existing.length > 0) {
+      // Existing member: only refresh email; preserve their team + active flag.
+      await insertRow("league_members", {
+        user_id: user.id,
+        email: user.email,
+      });
+    } else {
+      // New member: start inactive until the admin activates + assigns a team.
+      await insertRow("league_members", {
+        user_id: user.id,
+        email: user.email,
+        active: false,
+      });
+    }
     return sendJson(res, 200, { ok: true });
   }
 

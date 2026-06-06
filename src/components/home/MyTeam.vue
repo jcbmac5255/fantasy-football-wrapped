@@ -40,10 +40,12 @@ const teamName = (team: TableDataType) =>
     ? team.username || "Ghost Roster"
     : team.name || team.username || "Ghost Roster";
 
+const isActive = computed(() => active.value === true);
+
 const myTeam = computed(() =>
-  myRosterId.value === null
-    ? undefined
-    : props.tableData.find((team) => team.rosterId === myRosterId.value)
+  isActive.value && myRosterId.value !== null
+    ? props.tableData.find((team) => team.rosterId === myRosterId.value)
+    : undefined
 );
 
 const round = (n: number, digits = 1) =>
@@ -87,18 +89,18 @@ const emptyState = computed<{ title: string; body: string } | null>(() => {
   if (!authStore.isAuthenticated) {
     return {
       title: "Welcome to Engine Line",
-      body: "Sign in to see your team. Once the commissioner assigns your team, it'll show up here.",
+      body: "Sign in to see your team. Once the commissioner activates your account and assigns your team, it'll show up here.",
     };
   }
-  if (active.value === false) {
+  if (!isActive.value) {
     return {
-      title: "Account inactive",
-      body: "Your account is marked inactive. Reach out to the commissioner if that's a mistake.",
+      title: "Almost there",
+      body: "Your account isn't active yet — the commissioner will activate it and assign your team. Check back soon.",
     };
   }
   return {
     title: "No team assigned yet",
-    body: "You're signed in! The commissioner just needs to assign your team — check back soon.",
+    body: "You're active! The commissioner just needs to assign your team — check back soon.",
   };
 });
 </script>
@@ -106,7 +108,13 @@ const emptyState = computed<{ title: string; body: string } | null>(() => {
 <template>
   <div class="max-w-3xl px-4 mx-auto mt-4 mb-16">
     <Card
-      v-if="emptyState"
+      v-if="loading"
+      class="flex flex-col items-center gap-4 px-6 py-10 text-center"
+    >
+      <p class="text-muted-foreground">Loading your team…</p>
+    </Card>
+    <Card
+      v-else-if="emptyState"
       class="flex flex-col items-center gap-4 px-6 py-10 text-center"
     >
       <img
