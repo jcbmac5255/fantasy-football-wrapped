@@ -9,6 +9,18 @@ type Release = { version: string; date: string; content: Change[] };
 // (and bump APP_VERSION in src/lib/config.ts).
 const releases: Release[] = [
   {
+    version: "1.1.2",
+    date: "June 6, 2026",
+    content: [
+      {
+        type: "Fix",
+        text: [
+          "Player names now display correctly everywhere (trades, waivers, weekly reports, start/sit) instead of showing as a team defense.",
+        ],
+      },
+    ],
+  },
+  {
     version: "1.1.1",
     date: "June 6, 2026",
     content: [

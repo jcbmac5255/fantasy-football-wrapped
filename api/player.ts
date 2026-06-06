@@ -58,7 +58,17 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
     const { byId } = await getPlayersCache();
     const players = ids
       .map((id) => byId[id])
-      .filter((player): player is NonNullable<typeof player> => Boolean(player));
+      .filter((player): player is NonNullable<typeof player> => Boolean(player))
+      // The frontend reads `name`; Sleeper's raw objects only have full_name /
+      // first_name+last_name. Without `name`, every player falls back to a
+      // team "Defense" label, so add it.
+      .map((player) => ({
+        ...player,
+        name:
+          player.full_name ||
+          [player.first_name, player.last_name].filter(Boolean).join(" ") ||
+          player.player_id,
+      }));
     res.setHeader("Cache-Control", "public, max-age=3600");
     return sendJson(res, 200, { players });
   } catch (error) {
