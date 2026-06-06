@@ -75,6 +75,32 @@ const releases: Release[] = [
 // Show only the most recent releases.
 const recent = computed(() => releases.slice(0, 5));
 
+// Combine releases that share a date into a single dated group, merging their
+// changes by type (Feature / Update / Fix).
+const TYPE_ORDER: Change["type"][] = ["Feature", "Update", "Fix"];
+const groupedByDate = computed(() => {
+  const order: string[] = [];
+  const byDate = new Map<string, Map<Change["type"], string[]>>();
+  for (const release of recent.value) {
+    if (!byDate.has(release.date)) {
+      byDate.set(release.date, new Map());
+      order.push(release.date);
+    }
+    const byType = byDate.get(release.date)!;
+    for (const change of release.content) {
+      if (!byType.has(change.type)) byType.set(change.type, []);
+      byType.get(change.type)!.push(...change.text);
+    }
+  }
+  return order.map((date) => {
+    const byType = byDate.get(date)!;
+    const content = TYPE_ORDER.filter((type) => byType.has(type)).map(
+      (type) => ({ type, text: byType.get(type)! })
+    );
+    return { date, content };
+  });
+});
+
 const badgeClass = (type: Change["type"]) => {
   switch (type) {
     case "Feature":
@@ -94,13 +120,12 @@ const badgeClass = (type: Change["type"]) => {
         <span class="text-sm text-muted-foreground">v{{ APP_VERSION }}</span>
       </div>
 
-      <div v-for="release in recent" :key="release.version" class="mb-8">
-        <div class="flex items-baseline gap-2 mb-2">
-          <span class="text-xl font-semibold">v{{ release.version }}</span>
-          <span class="text-sm text-muted-foreground">{{ release.date }}</span>
+      <div v-for="group in groupedByDate" :key="group.date" class="mb-8">
+        <div class="mb-2">
+          <span class="text-xl font-semibold">{{ group.date }}</span>
         </div>
         <div
-          v-for="(change, i) in release.content"
+          v-for="(change, i) in group.content"
           :key="i"
           class="mt-3 max-w-4xl"
         >
