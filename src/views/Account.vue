@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from "vue";
+import { computed, onMounted, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { useAuthStore } from "@/store/auth";
 import { useSubscriptionStore } from "@/store/subscription";
@@ -92,8 +92,8 @@ const isSafeRedirectUrl = (rawUrl: string) => {
   return stripeRedirectHosts.has(target.hostname);
 };
 
-// The signed-in user's assigned team name.
-const myTeamName = computed(() => {
+// The signed-in user's assigned team name, derived from live league data.
+const liveTeamName = computed(() => {
   if (membership.rosterId === null) return "";
   const index = store.currentLeagueIndex;
   const users = store.leagueUsers[index];
@@ -109,6 +109,17 @@ const myTeamName = computed(() => {
     ? team.username || team.name
     : team.name || team.username;
 });
+
+// Show the cached name instantly (the league fetch can take a few seconds);
+// update + persist it once live data is available.
+const cachedTeamName = ref(localStorage.getItem("myTeamName") ?? "");
+watch(liveTeamName, (name) => {
+  if (name) {
+    cachedTeamName.value = name;
+    localStorage.setItem("myTeamName", name);
+  }
+});
+const myTeamName = computed(() => liveTeamName.value || cachedTeamName.value);
 
 const accountInitial = computed(() => {
   const email = authStore.user?.email ?? "";

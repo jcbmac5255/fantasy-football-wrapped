@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from "vue";
+import { computed, watch } from "vue";
 import { TableDataType } from "../../types/types";
 import { useStore } from "../../store/store";
 import { useMembershipStore } from "../../store/membership";
@@ -25,6 +25,15 @@ const myTeam = computed(() =>
 
 // Has a team but the league data hasn't loaded yet.
 const resolving = computed(() => membership.hasTeam && !myTeam.value);
+
+// Cache the resolved team name so the Account page can show it instantly.
+watch(
+  myTeam,
+  (team) => {
+    if (team) localStorage.setItem("myTeamName", teamName(team));
+  },
+  { immediate: true }
+);
 
 const round = (n: number, digits = 1) =>
   Number.isFinite(n) ? n.toFixed(digits) : "—";
