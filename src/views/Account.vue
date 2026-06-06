@@ -3,7 +3,9 @@ import { computed, onMounted, ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { useAuthStore } from "@/store/auth";
 import { useSubscriptionStore } from "@/store/subscription";
-import { getLeagueKey } from "@/store/store";
+import { getLeagueKey, useStore } from "@/store/store";
+import { useMembershipStore } from "@/store/membership";
+import { createTableData } from "@/api/helper";
 import type { LeagueInfoType } from "@/types/types";
 import { toast } from "vue-sonner";
 import { Button } from "@/components/ui/button";
@@ -29,6 +31,8 @@ import Separator from "@/components/ui/separator/Separator.vue";
 
 const authStore = useAuthStore();
 const subscriptionStore = useSubscriptionStore();
+const store = useStore();
+const membership = useMembershipStore();
 const route = useRoute();
 const router = useRouter();
 const showLogin = ref(true);
@@ -88,39 +92,22 @@ const isSafeRedirectUrl = (rawUrl: string) => {
   return stripeRedirectHosts.has(target.hostname);
 };
 
-const subscriptionStatusLabel = computed(() => {
-  if (subscriptionStore.loading) return "Loading";
-
-  const status = subscriptionStore.status.toLowerCase();
-  if (status === "none") return "Not Subscribed";
-  if (status === "season_pass") return "Season Pass Active";
-  if (status === "active") return "Premium Subscriber";
-  return status
-    .split("_")
-    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-    .join(" ");
-});
-
-const subscriptionStatusBadgeClass = computed(() => {
-  if (subscriptionStore.loading) {
-    return "bg-muted text-muted-foreground border-border";
-  }
-  const status = subscriptionStore.status.toLowerCase();
-  if (
-    status === "active" ||
-    status === "trialing" ||
-    status === "season_pass"
-  ) {
-    return "bg-emerald-100 text-emerald-900 border-emerald-200";
-  }
-  if (status === "none") {
-    return "bg-muted text-muted-foreground border-border";
-  }
-  if (status === "canceled" || subscriptionStore.cancelDate) {
-    return "bg-orange-100 text-orange-900 border-orange-200";
-  }
-
-  return "bg-slate-100 text-slate-900 border-slate-200";
+// The signed-in user's assigned team name.
+const myTeamName = computed(() => {
+  if (membership.rosterId === null) return "";
+  const index = store.currentLeagueIndex;
+  const users = store.leagueUsers[index];
+  const rosters = store.leagueRosters[index];
+  const points = store.weeklyPoints[index];
+  if (!users || !rosters || !points) return "";
+  const median = store.leagueInfo[index]?.medianScoring === 1;
+  const team = createTableData(users, rosters, points, median).find(
+    (t) => t.rosterId === membership.rosterId
+  );
+  if (!team) return "";
+  return store.showUsernames
+    ? team.username || team.name
+    : team.name || team.username;
 });
 
 const accountInitial = computed(() => {
@@ -684,16 +671,13 @@ onMounted(async () => {
               </div>
               <div class="flex-1 min-w-[12rem] mt-1.5">
                 <p class="font-medium break-all">{{ authStore.user?.email }}</p>
+                <p v-if="myTeamName" class="mt-0.5 text-sm">
+                  Team: <span class="font-medium">{{ myTeamName }}</span>
+                </p>
                 <p class="text-xs text-muted-foreground">
                   Member since {{ memberSinceLabel }}
                 </p>
               </div>
-              <span
-                class="inline-flex items-center px-3 py-1 text-xs font-medium border rounded-full"
-                :class="subscriptionStatusBadgeClass"
-              >
-                {{ subscriptionStatusLabel }}
-              </span>
             </div>
             <Separator />
             <p
