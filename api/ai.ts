@@ -5,7 +5,7 @@ import {
   rejectWrongMethod,
   requireUser,
   sendJson,
-} from "./_lib/http";
+} from "./_lib/http.js";
 import {
   runAudio,
   runLeagueRecap,
@@ -14,7 +14,7 @@ import {
   runTrends,
   runWeeklyPreview,
   runWeeklyReport,
-} from "./_lib/ai";
+} from "./_lib/ai.js";
 
 // Single entrypoint for every AI feature, selected via ?kind=.
 // Consolidated into one function to stay within Vercel's Hobby plan limit.

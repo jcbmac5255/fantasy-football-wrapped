@@ -2,7 +2,7 @@
 // AI features can share a single serverless function (api/ai.ts) while staying
 // readable. Each run* function takes the request body and returns the payload
 // the frontend expects.
-import { chat, parseJsonResponse, textToSpeech } from "./openai";
+import { chat, parseJsonResponse, textToSpeech } from "./openai.js";
 
 export const runTrends = async (body: {
   data?: unknown;

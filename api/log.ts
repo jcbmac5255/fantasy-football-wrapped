@@ -2,8 +2,8 @@ import {
   ApiRequest,
   ApiResponse,
   sendJson,
-} from "./_lib/http";
-import { countRows, insertRow } from "./_lib/supabaseAdmin";
+} from "./_lib/http.js";
+import { countRows, insertRow } from "./_lib/supabaseAdmin.js";
 
 // Best-effort analytics + the landing-page league count, selected via ?type=.
 // Consolidated into one function for the Hobby plan limit. All writes are

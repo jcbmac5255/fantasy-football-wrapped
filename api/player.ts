@@ -3,8 +3,8 @@ import {
   ApiResponse,
   rejectWrongMethod,
   sendJson,
-} from "./_lib/http";
-import { getPlayersCache, lookupPlayerId } from "./_lib/sleeperPlayers";
+} from "./_lib/http.js";
+import { getPlayersCache, lookupPlayerId } from "./_lib/sleeperPlayers.js";
 
 // Player data, selected via ?op=. Consolidated into one function for the Hobby
 // plan limit.
