@@ -39,16 +39,7 @@ watch(
               href="mailto:jcbmac5255@gmail.com?subject=Engine Line"
               class="font-medium text-primary hover:underline"
               >email</a
-            >. Built on the open-source
-            <a
-              aria-label="Link to github repository"
-              class="font-medium text-primary hover:underline"
-              href="https://github.com/kt474/fantasy-football-wrapped"
-              target="_blank"
-              rel="noopener noreferrer"
-              >ffwrapped</a
-            >
-            project.
+            >.
           </p>
         </div>
         <div class="flex items-center justify-between mt-6">

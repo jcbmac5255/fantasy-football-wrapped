@@ -68,8 +68,8 @@ const signOut = async () => {
       <Card v-if="authStore.isAuthenticated" class="p-6 text-center">
         <h2 class="text-lg font-semibold">Almost there</h2>
         <p class="mt-2 text-sm text-muted-foreground">
-          You're signed in. The commissioner needs to activate your account and
-          assign your team before you can get in. Check back soon.
+          You're signed in. An admin needs to activate your account and assign
+          your team before you can get in. Check back soon.
         </p>
         <Button variant="outline" class="mt-4" @click="signOut">Sign out</Button>
       </Card>
