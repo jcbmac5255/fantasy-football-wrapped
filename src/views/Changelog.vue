@@ -9,6 +9,18 @@ type Release = { version: string; date: string; content: Change[] };
 // (and bump APP_VERSION in src/lib/config.ts).
 const releases: Release[] = [
   {
+    version: "1.1.1",
+    date: "June 6, 2026",
+    content: [
+      {
+        type: "Update",
+        text: [
+          "Avatars now show each manager's custom league team avatar (set in Sleeper) instead of their profile picture.",
+        ],
+      },
+    ],
+  },
+  {
     version: "1.1.0",
     date: "June 6, 2026",
     content: [

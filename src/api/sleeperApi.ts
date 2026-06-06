@@ -685,6 +685,8 @@ export const getUsers = async (leagueId: string): Promise<UserType[]> => {
       name: user["metadata"]?.["team_name"] || user["display_name"],
       username: user["display_name"],
       avatar: user["avatar"] ?? "",
+      // Per-league custom team avatar (a full URL), set by the manager.
+      teamAvatar: user["metadata"]?.["avatar"] || undefined,
     };
   });
 };

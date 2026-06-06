@@ -8,7 +8,7 @@ export const LOGO_SRC = "/engine_line_ffl_transparent.png";
 
 // App version, shown on the Changelog page. Bump when you ship notable changes
 // and add a matching entry at the top of src/views/Changelog.vue.
-export const APP_VERSION = "1.1.0";
+export const APP_VERSION = "1.1.1";
 
 // The admin account. This email sees the Admin page and is the only
 // account the admin API endpoints accept. Can be overridden server-side with

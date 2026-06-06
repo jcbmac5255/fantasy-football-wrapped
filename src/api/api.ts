@@ -578,9 +578,13 @@ export const getData = async (leagueId: string): Promise<LeagueInfoType> => {
     Promise.all(
       users.map(async (user) => ({
         ...user,
-        avatarImg: user.avatar
-          ? ((await getAvatar(user.avatar)) ?? undefined)
-          : undefined,
+        // Prefer the manager's per-league team avatar; fall back to their
+        // Sleeper profile picture.
+        avatarImg: user.teamAvatar
+          ? user.teamAvatar
+          : user.avatar
+            ? ((await getAvatar(user.avatar)) ?? undefined)
+            : undefined,
       }))
     ),
   ]);

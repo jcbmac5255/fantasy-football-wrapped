@@ -99,6 +99,7 @@ export type UserType = {
   id: string;
   avatar: string;
   avatarImg?: string;
+  teamAvatar?: string;
   name: string;
   username: string;
   placement?: number;
