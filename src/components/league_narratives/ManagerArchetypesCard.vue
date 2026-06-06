@@ -5,15 +5,15 @@ import { generateManagerArchetype, type ManagerBlurbsPayload } from "@/api/api";
 import type { ManagerArchetype } from "@/lib/narratives";
 import { toast } from "vue-sonner";
 import { getLeagueKey, useStore } from "@/store/store";
+import { useMembershipStore } from "@/store/membership";
 import { LeagueInfoType } from "@/types/types";
 import Separator from "../ui/separator/Separator.vue";
-import { useSubscriptionStore } from "@/store/subscription.ts";
 import { Button } from "@/components/ui/button";
 import { handleImageFallback as handleImageError } from "@/lib/imageFallback";
 import { fakeProfileText } from "@/api/fakeLeague";
 
 const store = useStore();
-const subscriptionStore = useSubscriptionStore();
+const membership = useMembershipStore();
 const props = defineProps<{
   archetypes: ManagerArchetype[];
   payload: ManagerBlurbsPayload;
@@ -22,18 +22,30 @@ const props = defineProps<{
 
 const isLoading = ref(false);
 const blurbsByUserId = ref<Record<string, string>>({});
+const autoTried = ref(false);
 
-const getManagerArchetypes = async () => {
-  if (!props.payload.managers.length) {
+const currentLeague = computed(
+  () => store.leagueInfo[store.currentLeagueIndex]
+);
+const season = computed(() => currentLeague.value?.season ?? "");
+const seasonComplete = computed(
+  () => currentLeague.value?.status === "complete"
+);
+const isAdmin = computed(() => membership.isAdmin);
+const hasBlurbs = computed(
+  () => Object.keys(blurbsByUserId.value).length > 0
+);
+
+const getManagerArchetypes = async (force = false) => {
+  if (!props.payload.managers.length || !currentLeague.value) {
     return;
   }
-
   try {
     isLoading.value = true;
     const payload = props.preparePayload
       ? await props.preparePayload()
       : props.payload;
-    const result = await generateManagerArchetype(payload);
+    const result = await generateManagerArchetype(payload, season.value, force);
     blurbsByUserId.value = result.blurbs.reduce(
       (accumulator, entry) => {
         accumulator[entry.userId] = entry.blurb;
@@ -42,7 +54,7 @@ const getManagerArchetypes = async () => {
       {} as Record<string, string>
     );
     store.addManagerProfiles(
-      getLeagueKey(store.leagueInfo[store.currentLeagueIndex]),
+      getLeagueKey(currentLeague.value),
       blurbsByUserId.value
     );
     localStorage.setItem(
@@ -61,30 +73,32 @@ const getManagerArchetypes = async () => {
 };
 
 const storedManagerProfiles = computed(
-  () => store.leagueInfo[store.currentLeagueIndex]?.managerProfiles ?? {}
+  () => currentLeague.value?.managerProfiles ?? {}
 );
-
-const canGenerateArchetypes = computed(
-  () =>
-    (props.payload.managers.length > 0 &&
-      !isLoading.value &&
-      Object.keys(blurbsByUserId.value).length == 0) ||
-    subscriptionStore.isPremium
-);
-
-const generateButtonLabel = computed(() => {
-  if (isLoading.value) return "Generating...";
-  return "Generate profiles";
-});
 
 watch(
   storedManagerProfiles,
   (profiles) => {
-    if (Object.keys(profiles).length > 0) {
-      blurbsByUserId.value = profiles;
-      return;
+    blurbsByUserId.value = Object.keys(profiles).length > 0 ? profiles : {};
+  },
+  { immediate: true }
+);
+
+// Auto-generate once the season is over (generated once and shared via the
+// backend cache, so most visitors just read the stored copy).
+watch(
+  [() => props.payload.managers.length, seasonComplete, storedManagerProfiles],
+  () => {
+    if (
+      seasonComplete.value &&
+      props.payload.managers.length > 0 &&
+      !hasBlurbs.value &&
+      !isLoading.value &&
+      !autoTried.value
+    ) {
+      autoTried.value = true;
+      getManagerArchetypes();
     }
-    blurbsByUserId.value = {};
   },
   { immediate: true }
 );
@@ -99,12 +113,38 @@ watch(
           Long-term records, trends, and custom profiles that capture each
           manager’s tendencies, strengths, and overall identity.
         </p>
+        <p
+          v-if="isLoading"
+          class="mt-2 text-sm text-muted-foreground"
+        >
+          Generating profiles…
+        </p>
+        <p
+          v-else-if="!seasonComplete && !hasBlurbs && store.leagueInfo.length > 0"
+          class="mt-2 text-sm text-muted-foreground"
+        >
+          Profile write-ups are generated automatically at the end of the season.
+        </p>
       </div>
-      <Button :disabled="!canGenerateArchetypes" @click="getManagerArchetypes">
-        {{ generateButtonLabel }}
+      <Button
+        v-if="isAdmin && seasonComplete"
+        variant="outline"
+        :disabled="isLoading"
+        @click="getManagerArchetypes(true)"
+      >
+        {{ isLoading ? "Generating…" : "Regenerate" }}
       </Button>
     </div>
-    <div class="grid gap-4 mt-4 sm:grid-cols-2 md:grid-cols-3">
+
+    <p
+      v-if="archetypes.length === 0 && store.leagueInfo.length > 0"
+      class="mt-6 text-muted-foreground"
+    >
+      No active members to show yet. Assign active members their teams on the
+      Admin page.
+    </p>
+
+    <div v-else class="grid gap-4 mt-4 sm:grid-cols-2 md:grid-cols-3">
       <div
         v-for="archetype in archetypes"
         :key="archetype.userId"
@@ -131,22 +171,6 @@ watch(
           class="mt-2 text-sm leading-relaxed"
         >
           {{ blurbsByUserId[archetype.userId] }}
-        </p>
-        <p
-          class="mt-2 text-xs leading-relaxed text-muted-foreground"
-          v-if="
-            !subscriptionStore.isPremium && blurbsByUserId[archetype.userId]
-          "
-        >
-          A
-          <router-link
-            :to="{ path: '/account', query: $route.query }"
-            class="font-medium cursor-pointer hover:underline"
-            @click="store.currentTab = ''"
-          >
-            Premium subscription</router-link
-          >
-          unlocks all manager descriptions.
         </p>
         <p
           class="my-4 text-sm leading-relaxed text-muted-foreground"

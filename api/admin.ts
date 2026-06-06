@@ -63,6 +63,20 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
     return sendJson(res, 200, { ok: true });
   }
 
+  if (action === "activeRosters") {
+    if (rejectWrongMethod(req, res, "GET")) return;
+    const user = await getAuthenticatedUser(req);
+    if (!user) return sendJson(res, 401, { error: "Please sign in." });
+    const rows = await selectRows<MemberRow>(
+      "league_members",
+      "active=eq.true&roster_id=not.is.null&select=roster_id"
+    );
+    const rosterIds = rows
+      .map((r) => r.roster_id)
+      .filter((id): id is number => id !== null);
+    return sendJson(res, 200, { rosterIds });
+  }
+
   if (action === "getMe") {
     if (rejectWrongMethod(req, res, "GET")) return;
     const user = await getAuthenticatedUser(req);

@@ -381,7 +381,9 @@ export const generateWeeklyReportAudio = async (
 };
 
 export const generateManagerArchetype = async (
-  payload: ManagerBlurbsPayload
+  payload: ManagerBlurbsPayload,
+  season = "",
+  force = false
 ): Promise<ManagerBlurbsResponse> => {
   try {
     const response = await authenticatedFetch(
@@ -393,6 +395,8 @@ export const generateManagerArchetype = async (
         },
         body: JSON.stringify({
           data: payload,
+          season,
+          force,
         }),
       }
     );

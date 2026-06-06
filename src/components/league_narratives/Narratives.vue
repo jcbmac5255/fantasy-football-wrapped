@@ -1,8 +1,7 @@
 <script setup lang="ts">
-import { computed, defineAsyncComponent, ref, watch } from "vue";
+import { computed, defineAsyncComponent, onMounted, ref, watch } from "vue";
 import { useStore } from "../../store/store.ts";
-import { useAuthStore } from "@/store/auth";
-import { useSubscriptionStore } from "@/store/subscription.ts";
+import { getActiveRosters } from "@/lib/admin";
 import ManagerArchetypesCard from "./ManagerArchetypesCard.vue";
 import { LeagueInfoType, TableDataType } from "@/types/types.ts";
 import {
@@ -15,8 +14,6 @@ import { getDraftMetadata, getDraftPicks } from "@/api/sleeperApi";
 import { fakeManagerProfiles } from "@/api/fakeLeague.ts";
 
 const store = useStore();
-const authStore = useAuthStore();
-const subscriptionStore = useSubscriptionStore();
 const LeagueHistory = defineAsyncComponent(
   () => import("../league_history/LeagueHistory.vue")
 );
@@ -34,6 +31,28 @@ const narratives = ref<NarrativeBundle>({
 const isLeagueHistoryReady = ref(false);
 const areNarrativesReady = computed(
   () => narratives.value.managerArchetypes.length > 0
+);
+
+// Only show managers whose roster is assigned to an active member.
+const activeRosterIds = ref<number[]>([]);
+onMounted(async () => {
+  activeRosterIds.value = await getActiveRosters();
+});
+
+const activeUserIds = computed(() => {
+  const rosters = store.leagueRosters[store.currentLeagueIndex] ?? [];
+  const ids = new Set<string>();
+  for (const rosterId of activeRosterIds.value) {
+    const roster = rosters.find((r) => r && r.rosterId === rosterId);
+    if (roster?.id) ids.add(roster.id);
+  }
+  return ids;
+});
+
+const visibleArchetypes = computed(() =>
+  narratives.value.managerArchetypes.filter((manager) =>
+    activeUserIds.value.has(manager.userId)
+  )
 );
 
 const hydrateLeagueDraftPicks = async (league: LeagueInfoType) => {
@@ -182,11 +201,9 @@ const relativeRanks = computed(() => {
 });
 
 const managerPayload = computed<ManagerBlurbsPayload>(() => {
-  const hasPremiumAccess =
-    authStore.isAuthenticated && subscriptionStore.isPremium;
-  const managers = hasPremiumAccess
-    ? narratives.value.managerArchetypes
-    : narratives.value.managerArchetypes.slice(0, 1);
+  // Generate blurbs for every manager (cached once per season); the page itself
+  // only displays the active ones.
+  const managers = narratives.value.managerArchetypes;
 
   return {
     league: {
@@ -241,7 +258,7 @@ const managerPayload = computed<ManagerBlurbsPayload>(() => {
     />
     <ManagerArchetypesCard
       v-if="isLeagueHistoryReady && areNarrativesReady"
-      :archetypes="narratives.managerArchetypes"
+      :archetypes="visibleArchetypes"
       :payload="managerPayload"
       :prepare-payload="prepareManagerPayload"
     />

@@ -15,7 +15,35 @@ import {
   runWeeklyPreview,
   runWeeklyReport,
 } from "./_lib/ai.js";
-import { getStoredReport, saveStoredReport } from "./_lib/supabaseAdmin.js";
+import {
+  getStoredProfiles,
+  getStoredReport,
+  saveStoredProfiles,
+  saveStoredReport,
+} from "./_lib/supabaseAdmin.js";
+
+type ManagerBlurb = { userId: string; name: string; blurb: string };
+
+// Shared manager profiles: one set per league/season, generated once and reused
+// by everyone (like the weekly report).
+const handleSharedManagerProfiles = async (body: Record<string, unknown>) => {
+  const data = body.data as { league?: { leagueId?: string } } | undefined;
+  const leagueId = data?.league?.leagueId ?? "";
+  const season = typeof body.season === "string" ? body.season : "";
+  const force = body.force === true;
+  const canCache = Boolean(leagueId && season);
+
+  if (canCache && !force) {
+    const cached = await getStoredProfiles<ManagerBlurb[]>(leagueId, season);
+    if (cached && cached.length) return { blurbs: cached };
+  }
+
+  const result = await runManagerProfiles(body);
+  if (canCache && result.blurbs.length) {
+    await saveStoredProfiles(leagueId, season, result.blurbs);
+  }
+  return result;
+};
 
 // Shared weekly report: return the one canonical copy if it exists, otherwise
 // generate it once and store it so the whole league sees the same report.
@@ -72,7 +100,7 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
       case "premium-report":
         return sendJson(res, 200, await runPremiumReport(body));
       case "manager-profiles":
-        return sendJson(res, 200, await runManagerProfiles(body));
+        return sendJson(res, 200, await handleSharedManagerProfiles(body));
       case "audio": {
         const audio = await runAudio(body as { text?: string });
         res.statusCode = 200;

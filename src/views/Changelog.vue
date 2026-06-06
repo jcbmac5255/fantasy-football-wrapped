@@ -9,6 +9,24 @@ type Release = { version: string; date: string; content: Change[] };
 // (and bump APP_VERSION in src/lib/config.ts).
 const releases: Release[] = [
   {
+    version: "1.1.0",
+    date: "June 6, 2026",
+    content: [
+      {
+        type: "Feature",
+        text: [
+          "Manager Profiles now generate automatically at the end of each season and are shared with the whole league.",
+        ],
+      },
+      {
+        type: "Update",
+        text: [
+          "The Manager Profiles page now shows only active league members.",
+        ],
+      },
+    ],
+  },
+  {
     version: "1.0.0",
     date: "June 6, 2026",
     content: [

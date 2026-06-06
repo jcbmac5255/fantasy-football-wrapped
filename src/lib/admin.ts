@@ -31,6 +31,20 @@ export const registerMember = async (): Promise<void> => {
   }
 };
 
+// Roster ids belonging to active members (for filtering league-wide views).
+export const getActiveRosters = async (): Promise<number[]> => {
+  try {
+    const response = await authenticatedFetch(
+      `${ADMIN_URL}?action=activeRosters`
+    );
+    if (!response.ok) return [];
+    const data = (await response.json()) as { rosterIds?: number[] };
+    return data.rosterIds ?? [];
+  } catch {
+    return [];
+  }
+};
+
 // The signed-in user's assigned team + active status.
 export const getMyTeam = async (): Promise<{
   rosterId: number | null;
