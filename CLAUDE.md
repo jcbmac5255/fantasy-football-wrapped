@@ -50,13 +50,20 @@ functions in `api/` (see `SETUP.md`). Key points:
 - The `VITE_*` endpoint URLs are set to **relative `/api/...` paths** in the
   committed `.env.production` (and `.env.test`). They resolve to the functions in
   `api/`. `.env` itself is gitignored; secrets live in the Vercel dashboard.
-- `api/` functions: AI features (`trends`, `league-recap`, `weekly-report`,
-  `premium-report`, `weekly-report-audio`, `manager-profiles`, `weekly-preview`)
-  call OpenAI via `api/_lib/openai.ts` (server-side `OPENAI_API_KEY`, no SDK —
-  plain `fetch`). Player data (`players`, `player-id-lookup`) proxy/cache
-  Sleeper's public player list via `api/_lib/sleeperPlayers.ts`. Logging
-  (`log-league`, `log-username`, `account-alert`, `league-count`) is best-effort
-  Supabase via `api/_lib/supabaseAdmin.ts`. `api/espn.ts` proxies ESPN.
+- `api/` has only **4 route functions** — they're consolidated by domain and
+  selected via query param to stay under Vercel's Hobby plan limit (12):
+  - `api/ai.ts` → `?kind=trends|league-recap|weekly-report|premium-report|`
+    `weekly-preview|manager-profiles|audio`. Logic lives in `api/_lib/ai.ts`,
+    calling OpenAI via `api/_lib/openai.ts` (server-side `OPENAI_API_KEY`, no SDK —
+    plain `fetch`). The `premium-report`/`manager-profiles`/`audio` kinds require
+    a signed-in user.
+  - `api/player.ts` → `?op=byIds|lookup|news`, proxying/caching Sleeper's public
+    player list via `api/_lib/sleeperPlayers.ts` (`news` returns `[]`).
+  - `api/log.ts` → `?type=league|username|alert|count`, best-effort Supabase via
+    `api/_lib/supabaseAdmin.ts`.
+  - `api/espn.ts` → ESPN proxy.
+  Adding new endpoints: prefer extending an existing router over adding a new
+  file, to preserve function-count headroom.
 - Shared helpers live in `api/_lib/` (the `_` prefix keeps Vercel from routing
   them). `requireUser` in `api/_lib/http.ts` gates premium endpoints behind a
   valid Supabase session (free login — there's no subscription check).

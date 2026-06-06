@@ -88,7 +88,9 @@ export const getPlayerNews = async (
   let url = import.meta.env.VITE_PLAYER_NEWS;
 
   if (playerNames && playerNames.length > 0) {
-    url += `?keywords=${playerNames.join(",")}`;
+    // The endpoint may already carry a query string (e.g. "?op=news").
+    const separator = url.includes("?") ? "&" : "?";
+    url += `${separator}keywords=${playerNames.join(",")}`;
   }
   try {
     const response = await fetch(url);

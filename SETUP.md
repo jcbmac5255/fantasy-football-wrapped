@@ -9,10 +9,10 @@ backend, rebuilt as serverless functions in [`api/`](api/):
 
 | Feature | Endpoint | Needs |
 | --- | --- | --- |
-| Weekly report, premium report, league recap, trends, weekly preview, manager profiles, audio recap | `/api/*` | OpenAI key |
-| Player data (start/sit, projections) | `/api/players`, `/api/player-id-lookup` | nothing (uses public Sleeper data) |
+| Weekly report, premium report, league recap, trends, weekly preview, manager profiles, audio recap | `/api/ai?kind=...` | OpenAI key |
+| Player data (start/sit, projections) | `/api/player?op=...` | nothing (uses public Sleeper data) |
 | Accounts / login | — | Supabase project |
-| League count + usage logging | `/api/log-*`, `/api/league-count` | Supabase (optional) |
+| League count + usage logging | `/api/log?type=...` | Supabase (optional) |
 
 The Stripe paywall is removed — every premium feature is free. AI features sit
 behind a **free sign-in** so random visitors with your URL can't run up your
@@ -123,8 +123,8 @@ npm run dev                     # http://localhost:5173
 - **Custom domain:** add it in Vercel → Settings → Domains. Then update the
   hardcoded `siteUrl` in [`src/main.ts`](src/main.ts) and the canonical/og URLs
   in [`index.html`](index.html) for correct SEO (cosmetic).
-- **Player news:** `/api/player-news` returns empty by default (no free news
-  source). Plug a provider into [`api/player-news.ts`](api/player-news.ts) to
-  enable the Start/Sit news blurbs.
+- **Player news:** `/api/player?op=news` returns empty by default (no free news
+  source). Plug a provider into the `news` branch of [`api/player.ts`](api/player.ts)
+  to enable the Start/Sit news blurbs.
 - **Re-enable a paywall:** set `VITE_ALL_FEATURES_FREE=false` and stand up a
   billing backend (out of scope here).
