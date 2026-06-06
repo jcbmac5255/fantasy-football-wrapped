@@ -91,7 +91,7 @@ const ADMIN_EMAIL = (
   process.env.ADMIN_EMAIL ?? "jcbmac5255@gmail.com"
 ).toLowerCase();
 
-// Require the caller to be the commissioner/admin account. Returns the admin
+// Require the caller to be the admin account. Returns the admin
 // user, or sends 401/403 and returns null.
 export const requireAdmin = async (
   req: ApiRequest,
