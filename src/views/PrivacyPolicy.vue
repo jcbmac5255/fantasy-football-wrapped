@@ -43,7 +43,7 @@
         If you have any questions or concerns about this Privacy Policy, please
         contact us at this
         <a
-          href="mailto:kevin@ffwrapped.com?subject=privacy policy"
+          href="mailto:jcbmac5255@gmail.com?subject=privacy policy"
           class="font-medium text-primary hover:underline"
           >email</a
         >.

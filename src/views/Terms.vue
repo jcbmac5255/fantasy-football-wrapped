@@ -98,9 +98,9 @@
         <p class="my-3 text-xl font-semibold">Contact</p>
         If you have questions about these Terms, contact:
         <a
-          href="mailto:kevin@ffwrapped.com?subject=terms of service"
+          href="mailto:jcbmac5255@gmail.com?subject=terms of service"
           class="font-medium text-primary hover:underline"
-          >kevin@ffwrapped.com</a
+          >jcbmac5255@gmail.com</a
         >. <br /><br />
         Last updated: March 11, 2026.
       </div>

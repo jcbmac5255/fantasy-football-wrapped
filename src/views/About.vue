@@ -78,7 +78,7 @@ watch(
             >
             send an
             <a
-              href="mailto:kevin@ffwrapped.com?subject=ffwrapped request"
+              href="mailto:jcbmac5255@gmail.com?subject=ffwrapped request"
               class="font-medium text-primary hover:underline"
               >email,</a
             >
