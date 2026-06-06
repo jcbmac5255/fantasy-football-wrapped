@@ -12,7 +12,6 @@ import WrappedSlide from "./WrappedSlide.vue";
 import Draft from "../draft/Draft.vue";
 import Trades from "../roster_management/Trades.vue";
 import Waivers from "../roster_management/Waivers.vue";
-import OverallStats from "./OverallStats.vue";
 import WinnerPyramid from "./WinnerPyramid.vue";
 
 const store = useStore();
@@ -42,24 +41,6 @@ type Streak = {
 const closestMatchups = ref<MatchupDifference[]>([]);
 const farthestMatchups = ref<MatchupDifference[]>([]);
 const loading = ref<boolean>(true);
-
-const isShareSupported = ref(false);
-
-if (typeof window !== "undefined") {
-  isShareSupported.value = !!navigator.share;
-}
-
-const share = async () => {
-  try {
-    await navigator.share({
-      title: document.title,
-      text: "Engine Line 2025",
-      url: window.location.href,
-    });
-  } catch (error) {
-    console.error("Sharing failed:", error);
-  }
-};
 
 const chartOptions = ref({
   chart: {
@@ -549,7 +530,7 @@ const winStreak = computed(() => {
 });
 
 const totalSlides = computed(() => {
-  let total = 17;
+  let total = 16;
   if (league.value?.previousLeagues.length > 0) {
     total += 1;
   }
@@ -2429,32 +2410,6 @@ watch(
         </div>
       </WrappedSlide>
 
-      <!-- Outro Slide -->
-      <WrappedSlide bg-color="bg-gray-900" alignment="center">
-        <div class="space-y-6">
-          <h1 class="mb-4 text-3xl font-bold text-white sm:text-5xl">
-            Thank you for using Engine Line!
-          </h1>
-
-          <div class="text-gray-200">
-            <!-- Hardcoding data from 12/29/25 -->
-            <p class="mb-6 text-base sm:mb-8 sm:text-lg">
-              Here's a look at the 5600+ leagues that used Engine Line in 2025.
-            </p>
-            <OverallStats />
-            <p class="my-4 text-base sm:text-lg">See you next season ❤️</p>
-            <button
-              v-if="isShareSupported"
-              @click="share"
-              aria-label="Button share"
-              type="submit"
-              class="text-gray-50 mt-2 bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm w-auto px-5 py-2.5 text-center"
-            >
-              Share
-            </button>
-          </div>
-        </div>
-      </WrappedSlide>
       <!-- workaround to get data without copying over methods -->
     </div>
     <div v-else>
