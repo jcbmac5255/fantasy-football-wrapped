@@ -28,12 +28,18 @@ type FetchSubscriptionStatusOptions = {
 const SUBSCRIPTION_CACHE_KEY_PREFIX = "subscription-status";
 const SUBSCRIPTION_CACHE_TTL_MS = 5 * 60 * 1000;
 
+// Self-hosted instance: all premium features are free for everyone. When this is
+// true the app never calls the billing backend and always reports premium access.
+// Set VITE_ALL_FEATURES_FREE="false" to restore the original Stripe paywall.
+const ALL_FEATURES_FREE =
+  (import.meta.env.VITE_ALL_FEATURES_FREE ?? "true") !== "false";
+
 export const useSubscriptionStore = defineStore("subscription", () => {
   const authStore = useAuthStore();
 
   const loading = ref(false);
-  const isPremium = ref(false);
-  const status = ref("none");
+  const isPremium = ref(ALL_FEATURES_FREE);
+  const status = ref(ALL_FEATURES_FREE ? "free" : "none");
   const planType = ref<string | null>(null);
   const currentPeriodEnd = ref<string | null>(null);
   const trialEnd = ref<string | null>(null);
@@ -67,6 +73,12 @@ export const useSubscriptionStore = defineStore("subscription", () => {
   };
 
   const resetSubscriptionState = () => {
+    if (ALL_FEATURES_FREE) {
+      // Stay premium even when signed out so every feature remains free.
+      isPremium.value = true;
+      status.value = "free";
+      return;
+    }
     isPremium.value = false;
     status.value = "none";
     planType.value = null;
@@ -133,6 +145,12 @@ export const useSubscriptionStore = defineStore("subscription", () => {
     showLoading = true,
     showErrorToast = false,
   }: FetchSubscriptionStatusOptions = {}) => {
+    if (ALL_FEATURES_FREE) {
+      // No billing backend in the self-hosted build; everyone is premium.
+      isPremium.value = true;
+      status.value = "free";
+      return;
+    }
     if (!authStore.isAuthenticated) return;
 
     if (showLoading) {
@@ -170,6 +188,12 @@ export const useSubscriptionStore = defineStore("subscription", () => {
   const initialize = () => {
     if (initialized.value) return;
     initialized.value = true;
+
+    if (ALL_FEATURES_FREE) {
+      isPremium.value = true;
+      status.value = "free";
+      return;
+    }
 
     watch(
       () => authStore.isAuthenticated,

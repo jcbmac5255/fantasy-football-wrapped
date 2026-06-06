@@ -163,7 +163,12 @@ export const getPlayerIdLookupMap = async (
 
   try {
     const endpoint = import.meta.env.VITE_PLAYER_ID_LOOKUP;
-    const url = new URL(endpoint);
+    // Support relative endpoints (e.g. "/api/player-id-lookup") by resolving
+    // against the current origin; new URL() alone throws on a relative path.
+    const url = new URL(
+      endpoint,
+      typeof window !== "undefined" ? window.location.origin : undefined
+    );
 
     uniquePlayers.forEach(({ name, team }) => {
       url.searchParams.append("name", name);
