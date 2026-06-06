@@ -13,7 +13,7 @@ export const APP_VERSION = "1.1.1";
 // Cached league data schema version. Bump this whenever a deploy changes the
 // shape/content of fetched league data (e.g. avatars) so every browser's stale
 // localStorage cache is invalidated and re-fetched instead of waiting 24h.
-export const DATA_VERSION = 1;
+export const DATA_VERSION = 2;
 
 // The admin account. This email sees the Admin page and is the only
 // account the admin API endpoints accept. Can be overridden server-side with

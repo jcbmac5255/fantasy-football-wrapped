@@ -36,6 +36,18 @@ const checkSystemTheme = () => {
   }
 };
 
+// Derived caches that bake in avatar data (Standings table + per-season League
+// History tables). Cleared whenever the league data is re-fetched.
+const clearDerivedCaches = () => {
+  localStorage.removeItem("originalData");
+  for (let i = localStorage.length - 1; i >= 0; i -= 1) {
+    const key = localStorage.key(i);
+    if (key?.startsWith("league-history:")) {
+      localStorage.removeItem(key);
+    }
+  }
+};
+
 // This instance is locked to a single Sleeper league (see src/lib/config.ts).
 // Load it from cache when fresh (<24h), otherwise pull the latest from Sleeper.
 const loadLeague = async (leagueId: string) => {
@@ -55,6 +67,9 @@ const loadLeague = async (leagueId: string) => {
   if (cacheValid) {
     store.updateLeagueInfo(cached);
   } else {
+    // Re-fetching: also drop derived caches (Standings / League History build
+    // their own avatar-containing tables) so they rebuild from fresh data.
+    clearDerivedCaches();
     store.updateLoadingLeague(BRAND_NAME);
     const league = await getData(leagueId);
     league.dataVersion = DATA_VERSION;
