@@ -15,6 +15,28 @@ import {
   runWeeklyPreview,
   runWeeklyReport,
 } from "./_lib/ai.js";
+import { getStoredReport, saveStoredReport } from "./_lib/supabaseAdmin.js";
+
+// Shared weekly report: return the one canonical copy if it exists, otherwise
+// generate it once and store it so the whole league sees the same report.
+const FALLBACK_PREFIX = "Unable to generate";
+const handleSharedWeeklyReport = async (body: Record<string, unknown>) => {
+  const leagueId = typeof body.leagueId === "string" ? body.leagueId : "";
+  const season = typeof body.season === "string" ? body.season : "";
+  const week = Number(body.currentWeek);
+  const canCache = Boolean(leagueId && season && week);
+
+  if (canCache) {
+    const cached = await getStoredReport(leagueId, season, week);
+    if (cached) return { text: cached };
+  }
+
+  const result = await runWeeklyReport(body);
+  if (canCache && result.text && !result.text.startsWith(FALLBACK_PREFIX)) {
+    await saveStoredReport(leagueId, season, week, result.text);
+  }
+  return result;
+};
 
 // Single entrypoint for every AI feature, selected via ?kind=.
 // Consolidated into one function to stay within Vercel's Hobby plan limit.
@@ -44,7 +66,7 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
       case "league-recap":
         return sendJson(res, 200, await runLeagueRecap(body));
       case "weekly-report":
-        return sendJson(res, 200, await runWeeklyReport(body));
+        return sendJson(res, 200, await handleSharedWeeklyReport(body));
       case "weekly-preview":
         return sendJson(res, 200, await runWeeklyPreview(body));
       case "premium-report":

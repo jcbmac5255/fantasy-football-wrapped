@@ -58,3 +58,50 @@ export const countRows = async (table: string): Promise<number> => {
     return 0;
   }
 };
+
+// Shared weekly-report cache (one canonical report per league/season/week).
+// Returns null when not configured or not yet generated.
+export const getStoredReport = async (
+  leagueId: string,
+  season: string,
+  week: number
+): Promise<string | null> => {
+  const config = getConfig();
+  if (!config) return null;
+  try {
+    const query =
+      `league_id=eq.${encodeURIComponent(leagueId)}` +
+      `&season=eq.${encodeURIComponent(season)}` +
+      `&week=eq.${week}&select=report&limit=1`;
+    const response = await fetch(
+      `${config.url}/rest/v1/weekly_reports?${query}`,
+      {
+        headers: {
+          apikey: config.serviceKey,
+          Authorization: `Bearer ${config.serviceKey}`,
+        },
+      }
+    );
+    if (!response.ok) return null;
+    const rows = (await response.json()) as { report?: string }[];
+    return rows?.[0]?.report ?? null;
+  } catch (error) {
+    console.error("getStoredReport failed:", error);
+    return null;
+  }
+};
+
+export const saveStoredReport = async (
+  leagueId: string,
+  season: string,
+  week: number,
+  report: string
+): Promise<void> => {
+  // PK (league_id, season, week) + merge-duplicates makes this an upsert.
+  await insertRow("weekly_reports", {
+    league_id: leagueId,
+    season,
+    week,
+    report,
+  });
+};

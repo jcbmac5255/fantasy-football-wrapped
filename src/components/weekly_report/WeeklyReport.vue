@@ -111,7 +111,30 @@ const playoffWeeks = computed(() => {
   return [15, 16, 17];
 });
 
-const currentWeek = ref(weeks.value[0]);
+// A week is "final" (eligible for a report) once the NFL week has rolled past
+// it — Sleeper advances its week counter early Tuesday, after Monday Night
+// Football. league.currentWeek is 0 for completed/historical seasons, so all
+// of their weeks count as final. Demo mode (no leagues) is always final.
+const isWeekFinal = (week: number): boolean => {
+  if (store.leagueInfo.length === 0) return true;
+  const league = store.leagueInfo[store.currentLeagueIndex];
+  if (!league) return false;
+  if (!league.currentWeek) return true;
+  return week < league.currentWeek;
+};
+
+// The most recent finished week — what the Report tab should open on.
+const latestFinalWeek = computed(
+  () => weeks.value.find((week) => isWeekFinal(week)) ?? weeks.value[0]
+);
+
+// Per-week report cache for this session so flipping weeks is instant; the
+// backend additionally caches one shared copy per league/season/week.
+const reportsByWeek = ref<Record<number, string>>({});
+// Weeks currently being fetched, to dedupe overlapping requests.
+const reportsInFlight = new Set<number>();
+
+const currentWeek = ref(latestFinalWeek.value);
 
 const fetchPlayerNames = async () => {
   if (
@@ -201,76 +224,93 @@ const getPremiumReport = async () => {
 };
 
 const getReport = async () => {
-  if (store.leagueIds.length > 0) {
-    const currentLeague = store.leagueInfo[store.currentLeagueIndex];
-    let leagueMetadata: Record<string, string | number>;
-    if (isPlayoffs.value) {
-      const roundNames: { [key: number]: string } = {
-        1: "Quarterfinal round",
-        2: "Semifinal round",
-        3: "Final Championship round",
-        4: "Final Championship round",
-      };
-      leagueMetadata = {
-        playoffRound:
-          roundNames[currentWeek.value - currentLeague.regularSeasonLength],
-      };
-      if (currentWeek.value - currentLeague.regularSeasonLength > 2) {
-        leagueMetadata["ChampionshipMatchup"] = 1;
-      }
-    } else {
-      leagueMetadata = {
-        numberOfPlayoffTeams: currentLeague.playoffTeams,
-        numberRegularSeasonWeeks: currentLeague.regularSeasonLength,
-        currentWeek: currentWeek.value,
-      };
+  if (store.leagueIds.length === 0) return;
+  const week = currentWeek.value;
+
+  // Only finished weeks get a report; the in-progress week shows a "pending"
+  // message in the template instead.
+  if (!isWeekFinal(week)) {
+    rawWeeklyReport.value = "";
+    return;
+  }
+
+  // Serve the session cache instantly when we already have this week.
+  if (reportsByWeek.value[week]) {
+    rawWeeklyReport.value = reportsByWeek.value[week];
+    return;
+  }
+
+  // Don't fire a second request for a week that's already generating.
+  if (reportsInFlight.has(week)) return;
+  reportsInFlight.add(week);
+
+  const currentLeague = store.leagueInfo[store.currentLeagueIndex];
+  let leagueMetadata: Record<string, string | number>;
+  if (isPlayoffs.value) {
+    const roundNames: { [key: number]: string } = {
+      1: "Quarterfinal round",
+      2: "Semifinal round",
+      3: "Final Championship round",
+      4: "Final Championship round",
+    };
+    leagueMetadata = {
+      playoffRound:
+        roundNames[week - currentLeague.regularSeasonLength],
+    };
+    if (week - currentLeague.regularSeasonLength > 2) {
+      leagueMetadata["ChampionshipMatchup"] = 1;
     }
+  } else {
+    leagueMetadata = {
+      numberOfPlayoffTeams: currentLeague.playoffTeams,
+      numberRegularSeasonWeeks: currentLeague.regularSeasonLength,
+      currentWeek: week,
+    };
+  }
+  try {
     const response = await generateReport(
       reportPrompt.value,
       leagueMetadata,
       currentLeague.leagueId,
-      currentWeek.value,
+      week,
       currentLeague.season
     );
-    rawWeeklyReport.value = response.text;
-    store.addWeeklyReport(getLeagueKey(currentLeague), rawWeeklyReport.value);
-    localStorage.setItem(
-      "leagueInfo",
-      JSON.stringify(store.leagueInfo as LeagueInfoType[])
-    );
+    reportsByWeek.value[week] = response.text;
+    // Guard against a stale response if the user switched weeks mid-request.
+    if (currentWeek.value === week) {
+      rawWeeklyReport.value = response.text;
+    }
+  } finally {
+    reportsInFlight.delete(week);
   }
+};
+
+// Fetch player names + the report for the selected week. The report is only
+// generated for finished weeks; getReport() no-ops otherwise.
+const loadWeek = async () => {
+  if (
+    store.leagueInfo.length === 0 ||
+    !store.leagueInfo[store.currentLeagueIndex] ||
+    weeks.value.length === 0
+  ) {
+    return;
+  }
+  loading.value = true;
+  await fetchPlayerNames();
+  await getReport();
+  loading.value = false;
 };
 
 onMounted(async () => {
   if (
     store.leagueInfo.length > 0 &&
-    props.tableData[0].matchups &&
-    weeks.value.length > 0 &&
     store.leagueInfo[store.currentLeagueIndex] &&
-    !store.leagueInfo[store.currentLeagueIndex].weeklyReport &&
     store.leagueInfo[store.currentLeagueIndex].seasonType !== "Guillotine"
   ) {
-    loading.value = true;
-    await fetchPlayerNames();
-    await getReport();
-    loading.value = false;
-  } else if (
-    store.leagueInfo.length > 0 &&
-    store.leagueInfo[store.currentLeagueIndex] &&
-    store.leagueInfo[store.currentLeagueIndex].lastScoredWeek
-  ) {
-    loading.value = true;
-    await fetchPlayerNames();
-    const savedText = store.leagueInfo[store.currentLeagueIndex]?.weeklyReport
-      ? (store.leagueInfo[store.currentLeagueIndex].weeklyReport ?? "")
-      : "";
-    rawWeeklyReport.value = savedText;
-    const premiumSavedText = store.leagueInfo[store.currentLeagueIndex]
-      .premiumWeeklyReport
-      ? (store.leagueInfo[store.currentLeagueIndex].premiumWeeklyReport ?? "")
-      : "";
-    rawPremiumWeeklyReport.value = premiumSavedText;
-    loading.value = false;
+    currentWeek.value = latestFinalWeek.value;
+    rawPremiumWeeklyReport.value =
+      store.leagueInfo[store.currentLeagueIndex].premiumWeeklyReport ?? "";
+    await loadWeek();
   }
 });
 
@@ -394,25 +434,16 @@ const sortedTableData = computed(() => {
 watch(
   () => store.currentLeagueId,
   async () => {
-    currentWeek.value = weeks.value[0];
-    if (
-      !store.leagueInfo[store.currentLeagueIndex].weeklyReport &&
-      store.leagueInfo[store.currentLeagueIndex].seasonType !== "Guillotine" &&
-      weeks.value.length > 0
-    ) {
-      rawWeeklyReport.value = "";
-      loading.value = true;
-      await fetchPlayerNames();
-      await getReport();
-      loading.value = false;
-    } else if (
-      store.leagueInfo[store.currentLeagueIndex].lastScoredWeek &&
-      weeks.value.length > 0
-    ) {
-      await fetchPlayerNames();
+    // New league: drop the per-week cache and reload the latest finished week.
+    reportsByWeek.value = {};
+    rawWeeklyReport.value = "";
+    if (store.leagueInfo[store.currentLeagueIndex]?.seasonType === "Guillotine") {
+      return;
     }
-    rawWeeklyReport.value =
-      store.leagueInfo[store.currentLeagueIndex].weeklyReport ?? "";
+    rawPremiumWeeklyReport.value =
+      store.leagueInfo[store.currentLeagueIndex]?.premiumWeeklyReport ?? "";
+    currentWeek.value = latestFinalWeek.value;
+    await loadWeek();
   }
 );
 
@@ -495,11 +526,13 @@ const downloadReportImage = async () => {
   }
 };
 
-watch(
-  [() => props.regularSeasonLength, () => activeTab.value],
-  () => (currentWeek.value = weeks.value[0])
-);
-watch(() => currentWeek.value, fetchPlayerNames);
+watch([() => props.regularSeasonLength, () => activeTab.value], () => {
+  // Report tab opens on the latest finished week; Preview tab on the upcoming week.
+  currentWeek.value =
+    activeTab.value === "Report" ? latestFinalWeek.value : weeks.value[0];
+});
+// Changing the selected week reloads that week's players + report (cached).
+watch(() => currentWeek.value, loadWeek);
 </script>
 <template>
   <Card class="h-full px-6 pt-4 my-4 custom-width">
@@ -539,7 +572,7 @@ watch(() => currentWeek.value, fetchPlayerNames);
       <TabsContent value="Report">
         <WeeklyReportSummary
           v-if="
-            currentWeek == weeks[0] &&
+            isWeekFinal(currentWeek) &&
             (store.leagueInfo[store.currentLeagueIndex]?.lastScoredWeek ||
               store.leagueInfo.length == 0)
           "
@@ -560,6 +593,16 @@ watch(() => currentWeek.value, fetchPlayerNames);
           @copy-report="copyReport"
           @generate-premium="getPremiumReport"
         />
+        <p
+          v-else-if="
+            !isWeekFinal(currentWeek) &&
+            store.leagueInfo[store.currentLeagueIndex]?.lastScoredWeek
+          "
+          class="mb-24 text-gray-600 dark:text-gray-300"
+        >
+          This week's report will be available Tuesday, once the Monday night
+          game is final.
+        </p>
         <p
           v-else-if="
             currentWeek == 1 &&

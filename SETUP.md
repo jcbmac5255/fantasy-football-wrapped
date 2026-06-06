@@ -44,10 +44,24 @@ OpenAI bill.
      off (optional, friendlier for a private league).
    - To add "Sign in with Google", enable the Google provider and follow its
      prompts (optional).
-4. *(Optional, enables the logging endpoints + landing-page league count.)* Open
-   **SQL Editor** and run:
+4. **Open the SQL Editor and run the schema below.** The `weekly_reports` table
+   is **required for shared weekly reports** (one report generated per
+   league/week and shown to everyone). The other three tables are optional
+   (analytics logging + landing-page league count) — skip them and logging just
+   silently no-ops.
 
    ```sql
+   -- Required for shared per-week reports
+   create table if not exists weekly_reports (
+     league_id text not null,
+     season text not null,
+     week int not null,
+     report text not null,
+     created_at timestamptz default now(),
+     primary key (league_id, season, week)
+   );
+
+   -- Optional: analytics logging + landing-page league count
    create table if not exists leagues (
      league_id text primary key,
      name text, size int, type text, year text, platform text,
@@ -63,8 +77,9 @@ OpenAI bill.
    );
    ```
 
-   If you skip this, logging is silently disabled and the league count shows 0 —
-   nothing else is affected.
+   These tables are written only via the server-side service-role key, so make
+   sure `SUPABASE_SERVICE_ROLE_KEY` is set (Step 3). Without it, reports fall
+   back to per-browser generation (still works, just not shared).
 
 ---
 
@@ -91,13 +106,18 @@ OpenAI bill.
    | `VITE_SUPABASE_ANON_KEY` | your anon key | required for login |
    | `SUPABASE_URL` | same Project URL | lets `/api` verify logins |
    | `SUPABASE_ANON_KEY` | same anon key | " |
-   | `SUPABASE_SERVICE_ROLE_KEY` | service_role key | optional (logging) |
+   | `SUPABASE_SERVICE_ROLE_KEY` | service_role key | needed for shared reports + logging |
    | `OPENAI_MODEL` | e.g. `gpt-4o-mini` | optional override |
 
    The `VITE_*` endpoint paths are already committed in
    [`.env.production`](.env.production) — you don't add those.
 4. Click **Deploy**. You'll get a URL like `https://your-league.vercel.app`.
-5. In Supabase → **Authentication → URL Configuration**, set the **Site URL** to
+5. **Raise the function timeout.** AI report generation takes ~9s, which is close
+   to the Hobby plan's 10s default. Go to **Settings → Functions → Function Max
+   Duration** and set it to **60s** so the first generation of each report never
+   times out. (Only the first viewer of a given week waits; the rest get the
+   cached copy instantly.)
+6. In Supabase → **Authentication → URL Configuration**, set the **Site URL** to
    your Vercel URL so login redirects work.
 
 Share the URL with your league. They can use all the analytics immediately, and
