@@ -9,6 +9,18 @@ type Release = { version: string; date: string; content: Change[] };
 // (and bump APP_VERSION in src/lib/config.ts).
 const releases: Release[] = [
   {
+    version: "1.2.0",
+    date: "June 6, 2026",
+    content: [
+      {
+        type: "Feature",
+        text: [
+          "The My Team page now has season highlights (best/worst week, biggest win, worst loss, longest streaks, points left on the bench) and a weekly scoring chart with win/loss coloring vs the league average.",
+        ],
+      },
+    ],
+  },
+  {
     version: "1.1.2",
     date: "June 6, 2026",
     content: [

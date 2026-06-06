@@ -8,7 +8,7 @@ export const LOGO_SRC = "/engine_line_ffl_transparent.png";
 
 // App version, shown on the Changelog page. Bump when you ship notable changes
 // and add a matching entry at the top of src/views/Changelog.vue.
-export const APP_VERSION = "1.1.2";
+export const APP_VERSION = "1.2.0";
 
 // Cached league data schema version. Bump this whenever a deploy changes the
 // shape/content of fetched league data (e.g. avatars) so every browser's stale
