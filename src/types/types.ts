@@ -13,6 +13,7 @@ export type LeagueInfoType = {
   leagueWinner: string | null;
   legacyWinner?: number;
   lastUpdated: number;
+  dataVersion?: number;
   previousLeagueId: string | null;
   lastScoredWeek: number;
   winnersBracket: Bracket[];

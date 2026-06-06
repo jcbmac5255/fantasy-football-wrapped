@@ -7,7 +7,7 @@ import { getData, inputLeague } from "../api/api";
 import { LeagueInfoType } from "../types/types";
 import { toast } from "vue-sonner";
 import { getParsedStorageItem, isBoolean } from "@/lib/storage";
-import { LEAGUE_ID, BRAND_NAME } from "@/lib/config";
+import { LEAGUE_ID, BRAND_NAME, DATA_VERSION } from "@/lib/config";
 import { getSettings } from "@/lib/admin";
 
 const Table = defineAsyncComponent(
@@ -46,11 +46,18 @@ const loadLeague = async (leagueId: string) => {
   );
   const cached = savedLeagues.find((league) => league.leagueId === leagueId);
 
-  if (cached && Date.now() - cached.lastUpdated < 86400000) {
+  // Use the cache only if it's fresh AND built by the current data schema.
+  const cacheValid =
+    cached &&
+    Date.now() - cached.lastUpdated < 86400000 &&
+    cached.dataVersion === DATA_VERSION;
+
+  if (cacheValid) {
     store.updateLeagueInfo(cached);
   } else {
     store.updateLoadingLeague(BRAND_NAME);
     const league = await getData(leagueId);
+    league.dataVersion = DATA_VERSION;
     store.updateLeagueInfo(league);
     await inputLeague(
       leagueId,

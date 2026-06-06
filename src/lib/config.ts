@@ -10,6 +10,11 @@ export const LOGO_SRC = "/engine_line_ffl_transparent.png";
 // and add a matching entry at the top of src/views/Changelog.vue.
 export const APP_VERSION = "1.1.1";
 
+// Cached league data schema version. Bump this whenever a deploy changes the
+// shape/content of fetched league data (e.g. avatars) so every browser's stale
+// localStorage cache is invalidated and re-fetched instead of waiting 24h.
+export const DATA_VERSION = 1;
+
 // The admin account. This email sees the Admin page and is the only
 // account the admin API endpoints accept. Can be overridden server-side with
 // the ADMIN_EMAIL env var (must match this for the UI + API to agree).
