@@ -4,7 +4,8 @@ import AppSidebar from "@/components/layout/AppSidebar.vue";
 import CardContainer from "./components/util/CardContainer.vue";
 import { useStore } from "./store/store";
 import { useAuthStore } from "./store/auth";
-import { registerMember } from "./lib/admin";
+import { useMembershipStore } from "./store/membership";
+import AuthLanding from "./views/AuthLanding.vue";
 import { LeagueInfoType } from "./types/types";
 import { inject } from "@vercel/analytics";
 import { useRoute, useRouter } from "vue-router";
@@ -25,15 +26,21 @@ const router = useRouter();
 const route = useRoute();
 const store = useStore();
 const authStore = useAuthStore();
+const membership = useMembershipStore();
 
-// Record every signed-in user as a league member so the admin can assign them
-// a team. Best-effort and idempotent (never resets an existing assignment).
+// Re-evaluate app access whenever auth state changes. refresh() registers the
+// member (idempotent) and reads their team/active status.
 watch(
   () => authStore.isAuthenticated,
-  (isAuthenticated) => {
-    if (isAuthenticated) registerMember();
-  },
+  () => membership.refresh(),
   { immediate: true }
+);
+
+// True while we don't yet know enough to decide what to render.
+const booting = computed(
+  () =>
+    !authStore.initialized ||
+    (authStore.isAuthenticated && !membership.loaded)
 );
 
 const systemDarkMode = window.matchMedia(
@@ -158,7 +165,14 @@ const setHtmlBackground = () => {
 
 <template>
   <div>
-    <div>
+    <!-- Booting: deciding whether the user can access the app -->
+    <div
+      v-if="booting"
+      class="flex items-center justify-center min-h-screen bg-background"
+    />
+    <!-- Gate: must be signed in + active + assigned a team (admin always in) -->
+    <AuthLanding v-else-if="!membership.canAccess" />
+    <div v-else>
       <SidebarProvider>
         <AppSidebar />
         <SidebarInset class="flex flex-col h-screen">

@@ -1,9 +1,8 @@
 <script setup lang="ts">
-import { computed, ref, watch } from "vue";
+import { computed } from "vue";
 import { TableDataType } from "../../types/types";
 import { useStore } from "../../store/store";
-import { useAuthStore } from "../../store/auth";
-import { getMyTeam } from "../../lib/admin";
+import { useMembershipStore } from "../../store/membership";
 import { Card } from "../ui/card";
 
 const props = defineProps<{
@@ -11,42 +10,21 @@ const props = defineProps<{
 }>();
 
 const store = useStore();
-const authStore = useAuthStore();
-
-const loading = ref(false);
-const myRosterId = ref<number | null>(null);
-const active = ref<boolean | null>(null);
-
-// Load the signed-in user's admin-assigned team.
-watch(
-  () => authStore.isAuthenticated,
-  async (isAuthenticated) => {
-    if (!isAuthenticated) {
-      myRosterId.value = null;
-      active.value = null;
-      return;
-    }
-    loading.value = true;
-    const me = await getMyTeam();
-    myRosterId.value = me.rosterId;
-    active.value = me.active;
-    loading.value = false;
-  },
-  { immediate: true }
-);
+const membership = useMembershipStore();
 
 const teamName = (team: TableDataType) =>
   store.showUsernames
     ? team.username || "Ghost Roster"
     : team.name || team.username || "Ghost Roster";
 
-const isActive = computed(() => active.value === true);
-
 const myTeam = computed(() =>
-  isActive.value && myRosterId.value !== null
-    ? props.tableData.find((team) => team.rosterId === myRosterId.value)
+  membership.hasTeam
+    ? props.tableData.find((team) => team.rosterId === membership.rosterId)
     : undefined
 );
+
+// Has a team but the league data hasn't loaded yet.
+const resolving = computed(() => membership.hasTeam && !myTeam.value);
 
 const round = (n: number, digits = 1) =>
   Number.isFinite(n) ? n.toFixed(digits) : "—";
@@ -82,39 +60,20 @@ const stats = computed(() => {
     { label: "Expected Wins", value: round(t.winsAgainstAll, 0) },
   ];
 });
-
-// Which message to show when there's no team dashboard to render.
-const emptyState = computed<{ title: string; body: string } | null>(() => {
-  if (myTeam.value) return null;
-  if (!authStore.isAuthenticated) {
-    return {
-      title: "Welcome to Engine Line",
-      body: "Sign in to see your team. Once the commissioner activates your account and assigns your team, it'll show up here.",
-    };
-  }
-  if (!isActive.value) {
-    return {
-      title: "Almost there",
-      body: "Your account isn't active yet — the commissioner will activate it and assign your team. Check back soon.",
-    };
-  }
-  return {
-    title: "No team assigned yet",
-    body: "You're active! The commissioner just needs to assign your team — check back soon.",
-  };
-});
 </script>
 
 <template>
   <div class="max-w-3xl px-4 mx-auto mt-4 mb-16">
     <Card
-      v-if="loading"
+      v-if="resolving"
       class="flex flex-col items-center gap-4 px-6 py-10 text-center"
     >
       <p class="text-muted-foreground">Loading your team…</p>
     </Card>
+
+    <!-- Only reachable by the admin without a team assigned. -->
     <Card
-      v-else-if="emptyState"
+      v-else-if="!myTeam"
       class="flex flex-col items-center gap-4 px-6 py-10 text-center"
     >
       <img
@@ -123,12 +82,14 @@ const emptyState = computed<{ title: string; body: string } | null>(() => {
         alt="Engine Line logo"
       />
       <div>
-        <h2 class="text-2xl font-bold">{{ emptyState.title }}</h2>
-        <p class="max-w-md mt-1 text-muted-foreground">{{ emptyState.body }}</p>
+        <h2 class="text-2xl font-bold">No team assigned</h2>
+        <p class="max-w-md mt-1 text-muted-foreground">
+          Assign yourself a team on the Admin page to see your dashboard here.
+        </p>
       </div>
     </Card>
 
-    <div v-else-if="myTeam">
+    <div v-else>
       <Card class="flex items-center gap-4 p-5">
         <img
           v-if="myTeam.avatarImg"
