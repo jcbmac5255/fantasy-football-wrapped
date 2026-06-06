@@ -8,6 +8,7 @@ import {
   setLeagueId,
   listMembers,
   setMember,
+  deleteMember,
   type LeagueMember,
 } from "@/lib/admin";
 import { getData } from "@/api/api";
@@ -123,6 +124,26 @@ const onTeamChange = (member: LeagueMember, value: unknown) => {
   const str = String(value ?? "");
   saveMember(member, { rosterId: str === "" ? null : Number(str) });
 };
+
+const removeMember = async (member: LeagueMember) => {
+  if (
+    !window.confirm(
+      `Remove ${member.email ?? "this member"}? They'll reappear here if they sign in again.`
+    )
+  ) {
+    return;
+  }
+  savingMemberId.value = member.user_id;
+  try {
+    await deleteMember(member.user_id);
+    members.value = members.value.filter(
+      (m) => m.user_id !== member.user_id
+    );
+  } catch (error) {
+    toast.error(error instanceof Error ? error.message : "Failed to delete.");
+  }
+  savingMemberId.value = null;
+};
 </script>
 
 <template>
@@ -186,7 +207,8 @@ const onTeamChange = (member: LeagueMember, value: unknown) => {
                 <tr class="border-b">
                   <th class="py-2 pr-4 font-medium">Email</th>
                   <th class="py-2 pr-4 font-medium">Team</th>
-                  <th class="py-2 font-medium">Active</th>
+                  <th class="py-2 pr-4 font-medium">Active</th>
+                  <th class="py-2 font-medium"></th>
                 </tr>
               </thead>
               <tbody>
@@ -222,7 +244,7 @@ const onTeamChange = (member: LeagueMember, value: unknown) => {
                       </SelectContent>
                     </Select>
                   </td>
-                  <td class="py-3 align-middle">
+                  <td class="py-3 pr-4 align-middle">
                     <Switch
                       :model-value="member.active ?? true"
                       :disabled="savingMemberId === member.user_id"
@@ -230,6 +252,17 @@ const onTeamChange = (member: LeagueMember, value: unknown) => {
                         (value) => saveMember(member, { active: value })
                       "
                     />
+                  </td>
+                  <td class="py-3 align-middle">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      class="text-destructive hover:text-destructive"
+                      :disabled="savingMemberId === member.user_id"
+                      @click="removeMember(member)"
+                    >
+                      Remove
+                    </Button>
                   </td>
                 </tr>
               </tbody>

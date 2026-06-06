@@ -80,3 +80,12 @@ export const setMember = async (
   });
   if (!response.ok) throw new Error("Failed to update member.");
 };
+
+export const deleteMember = async (userId: string): Promise<void> => {
+  const response = await authenticatedFetch(`${ADMIN_URL}?action=deleteMember`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ userId }),
+  });
+  if (!response.ok) throw new Error("Failed to delete member.");
+};

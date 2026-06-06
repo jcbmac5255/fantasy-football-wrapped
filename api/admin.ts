@@ -6,7 +6,7 @@ import {
   requireAdmin,
   sendJson,
 } from "./_lib/http.js";
-import { insertRow, selectRows } from "./_lib/supabaseAdmin.js";
+import { deleteRows, insertRow, selectRows } from "./_lib/supabaseAdmin.js";
 
 // Admin + membership API, selected via ?action=.
 //   GET  ?action=getSettings                      (public)  -> { leagueId }
@@ -107,6 +107,18 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
           : Number(body.rosterId),
       active: body.active ?? true,
     });
+    return sendJson(res, 200, { ok: true });
+  }
+
+  if (action === "deleteMember") {
+    if (rejectWrongMethod(req, res, "POST")) return;
+    if (!(await requireAdmin(req, res))) return;
+    const userId = ((req.body ?? {}) as { userId?: string }).userId;
+    if (!userId) return sendJson(res, 400, { error: "Missing userId." });
+    await deleteRows(
+      "league_members",
+      `user_id=eq.${encodeURIComponent(userId)}`
+    );
     return sendJson(res, 200, { ok: true });
   }
 

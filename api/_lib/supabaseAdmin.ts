@@ -33,6 +33,26 @@ export const insertRow = async (
   }
 };
 
+// Delete rows matching a PostgREST filter, e.g. "user_id=eq.123".
+export const deleteRows = async (
+  table: string,
+  query: string
+): Promise<void> => {
+  const config = getConfig();
+  if (!config || !query) return;
+  try {
+    await fetch(`${config.url}/rest/v1/${table}?${query}`, {
+      method: "DELETE",
+      headers: {
+        apikey: config.serviceKey,
+        Authorization: `Bearer ${config.serviceKey}`,
+      },
+    });
+  } catch (error) {
+    console.error(`deleteRows(${table}) failed:`, error);
+  }
+};
+
 // Generic PostgREST select. `query` is a raw querystring, e.g.
 // "user_id=eq.123&select=roster_id,active". Returns [] when unconfigured.
 export const selectRows = async <T>(
