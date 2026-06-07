@@ -33,6 +33,7 @@ import {
   FlaskConical,
   IdCard,
   Shield,
+  Swords,
 } from "lucide-vue-next";
 import { ADMIN_EMAIL } from "@/lib/config";
 import { Separator } from "../ui/separator";
@@ -151,6 +152,10 @@ const data = {
         {
           title: "Manager Profiles",
           icon: IdCard,
+        },
+        {
+          title: "Rivalries",
+          icon: Swords,
         },
         {
           title: "Wrapped",

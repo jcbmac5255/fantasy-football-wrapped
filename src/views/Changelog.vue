@@ -9,6 +9,18 @@ type Release = { version: string; date: string; content: Change[] };
 // (and bump APP_VERSION in src/lib/config.ts).
 const releases: Release[] = [
   {
+    version: "1.3.0",
+    date: "June 6, 2026",
+    content: [
+      {
+        type: "Feature",
+        text: [
+          "New Rivalries tab: all-time head-to-head records, scoring edges, streaks, closest games and blowouts, and a 'heat' rating for every manager matchup across league history.",
+        ],
+      },
+    ],
+  },
+  {
     version: "1.2.1",
     date: "June 6, 2026",
     content: [

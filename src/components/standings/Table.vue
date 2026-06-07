@@ -99,6 +99,9 @@ const FakeWrapped = defineAsyncComponent(
   () => import("../wrapped/FakeWrapped.vue")
 );
 const MyTeam = defineAsyncComponent(() => import("../home/MyTeam.vue"));
+const Rivalries = defineAsyncComponent(
+  () => import("../league_narratives/Rivalries.vue")
+);
 
 const ScheduleSimulator = defineAsyncComponent(
   () => import("../schedule_simulator/ScheduleSimulator.vue")
@@ -129,6 +132,7 @@ const tabOptions = [
   "Start/Sit",
   "League History",
   "Manager Profiles",
+  "Rivalries",
   "Wrapped",
   "ESPN",
 ];
@@ -710,6 +714,9 @@ const getTeamName = (tableDataItem: TableDataType) => {
       "
     >
       <Narratives :tableData="tableData" />
+    </div>
+    <div v-if="store.currentTab === 'Rivalries' && seasonType !== 'Guillotine'">
+      <Rivalries :tableData="tableData" />
     </div>
     <div v-if="store.currentTab === 'Wrapped'">
       <Wrapped
