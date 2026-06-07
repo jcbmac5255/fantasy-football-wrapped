@@ -646,6 +646,7 @@ const filteredRivalries = computed(() => {
                 </div>
                 <span class="text-base font-semibold">
                   {{ rivalry.managerA.displayName }}
+                  <span class="text-muted-foreground">({{ rivalry.winsA }})</span>
                 </span>
                 <span class="text-muted-foreground">vs</span>
                 <div
@@ -666,6 +667,7 @@ const filteredRivalries = computed(() => {
                 </div>
                 <span class="text-base font-semibold">
                   {{ rivalry.managerB.displayName }}
+                  <span class="text-muted-foreground">({{ rivalry.winsB }})</span>
                 </span>
               </div>
               <p class="text-sm text-muted-foreground">
