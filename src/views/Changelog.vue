@@ -9,6 +9,18 @@ type Release = { version: string; date: string; content: Change[] };
 // (and bump APP_VERSION in src/lib/config.ts).
 const releases: Release[] = [
   {
+    version: "1.3.1",
+    date: "June 7, 2026",
+    content: [
+      {
+        type: "Update",
+        text: [
+          "Filtering Rivalries by a manager now flips every card to that manager's perspective — their avatar, win count, and points show first.",
+        ],
+      },
+    ],
+  },
+  {
     version: "1.3.0",
     date: "June 6, 2026",
     content: [

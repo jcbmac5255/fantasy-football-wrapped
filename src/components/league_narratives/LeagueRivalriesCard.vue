@@ -556,6 +556,44 @@ const filteredRivalries = computed(() => {
       rivalry.managerB.userId === selectedManager.value
   );
 });
+
+// When a manager is selected, flip each card so that manager sits in the A
+// slot — their avatar, win count, and points show first. A/B-positional fields
+// (managers, wins, total points, per-game points) swap together; summary
+// strings reference managers by name/userId, so they stay correct as-is.
+const orientCard = (
+  card: RivalryCard,
+  perspectiveUserId: string
+): RivalryCard => {
+  if (card.managerB.userId !== perspectiveUserId) {
+    return card;
+  }
+
+  return {
+    ...card,
+    managerA: card.managerB,
+    managerB: card.managerA,
+    winsA: card.winsB,
+    winsB: card.winsA,
+    totalPointsA: card.totalPointsB,
+    totalPointsB: card.totalPointsA,
+    games: card.games.map((game) => ({
+      ...game,
+      pointsA: game.pointsB,
+      pointsB: game.pointsA,
+    })),
+  };
+};
+
+const orientedRivalries = computed(() => {
+  if (selectedManager.value === "all") {
+    return filteredRivalries.value;
+  }
+
+  return filteredRivalries.value.map((rivalry) =>
+    orientCard(rivalry, selectedManager.value)
+  );
+});
 </script>
 
 <template>
@@ -600,11 +638,11 @@ const filteredRivalries = computed(() => {
       </p>
 
       <div
-        v-if="filteredRivalries.length > 0"
+        v-if="orientedRivalries.length > 0"
         class="grid gap-4 xl:grid-cols-2"
       >
         <div
-          v-for="rivalry in filteredRivalries"
+          v-for="rivalry in orientedRivalries"
           :key="rivalry.key"
           class="rounded-xl border bg-background/70 p-4"
         >
