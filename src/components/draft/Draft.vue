@@ -325,7 +325,11 @@ const getValueColor = (value: number) => {
         </h5>
         <div class="inline-flex p-1 -mt-1.5" role="tablist">
           <TabsList>
-            <TabsTrigger value="Grades"> Grades </TabsTrigger>
+            <!-- Grades compare draft slot vs ADP, which doesn't apply to
+                 auction drafts (no pick slots) — hide it there. -->
+            <TabsTrigger v-if="draftType !== 'auction'" value="Grades">
+              Grades
+            </TabsTrigger>
             <TabsTrigger value="Recap"> Recap </TabsTrigger>
           </TabsList>
         </div>
@@ -469,7 +473,10 @@ const getValueColor = (value: number) => {
                   </p>
                   <p>{{ `${pick.position} - ${pick.team}` }}</p>
                   <div class="flex justify-between text-sm">
-                    <p>
+                    <p v-if="draftType === 'auction'" class="font-medium">
+                      ${{ pick.amount }}
+                    </p>
+                    <p v-else>
                       {{
                         `${pick.round}.${getRoundPick(
                           pick.draftSlot,

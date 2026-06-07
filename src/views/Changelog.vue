@@ -9,6 +9,19 @@ type Release = { version: string; date: string; content: Change[] };
 // (and bump APP_VERSION in src/lib/config.ts).
 const releases: Release[] = [
   {
+    version: "1.2.1",
+    date: "June 6, 2026",
+    content: [
+      {
+        type: "Fix",
+        text: [
+          "Auction drafts now show each player's winning bid amount on the Draft Recap (instead of a snake-style round/pick number).",
+          "Hid the Grades tab for auction drafts — its grades are based on snake-draft pick position vs ADP, which doesn't apply to auctions.",
+        ],
+      },
+    ],
+  },
+  {
     version: "1.2.0",
     date: "June 6, 2026",
     content: [
